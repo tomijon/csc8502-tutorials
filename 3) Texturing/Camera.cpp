@@ -4,12 +4,6 @@
 void Camera::UpdateCamera(float dt) {
 	UpdateRotation();
 	UpdatePosition(dt);
-
-	std::cout << "Pitch: " << pitch << std::endl;
-	std::cout << "Yaw: " << yaw << std::endl;
-
-	std::cout << "Position: (" << position.x << ", " << position.y
-		<< ", " << position.z << ")\n";
 }
 
 
