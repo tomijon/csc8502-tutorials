@@ -6,7 +6,7 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 	meshes[1] = new Quad;
 	camera = new Camera(0, 0, { 0, 0, 0 });
 
-	shader = new Shader("tut3_vertex.glsl", "tut3_fragment.glsl");
+	shader = new Shader("tut4_vertex.glsl", "tut4_fragment.glsl");
 	if (!shader->LoadSuccess()) return;
 
 	textures[0] = SOIL_load_OGL_texture(TEXTUREDIR"brick.tga", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, 0);
