@@ -1,8 +1,9 @@
 #pragma once
 
+#include <unordered_map>
+
 class Vector2;
 class Mesh;
-class unordered_map;
 
 namespace Terrain {
 	class NoiseGenerator;
@@ -10,6 +11,22 @@ namespace Terrain {
 	class Heightmap;
 	class Droplet;
 	
+
+	struct Point {
+		unsigned int x;
+		unsigned int y;
+
+		bool operator==(const Point& other) const {
+			return other.x == x and other.y == y;
+		}
+	};
+
+
+	struct PointHash {
+		size_t operator()(const Point& point) const {
+			return (static_cast<size_t>(point.x) << 32) ^ point.y;
+		}
+	};
 	
 	
 	// Perlin Noise Generator.
@@ -45,6 +62,9 @@ namespace Terrain {
 		float ampMult;
 
 		void generate();
+		float calculateHeight(float x, float y);
+		void normalise(float lowest, float highest);
+
 		void applyDistance();
 		float getDistance(int x, int y);
 		Vector2 generateGradient(int x, int y);
@@ -54,7 +74,7 @@ namespace Terrain {
 
 	private:
 		float* image;
-		Vector2* gradients;
+		std::unordered_map<Point, Vector2, PointHash> gradients;
 	};
 
 
@@ -74,6 +94,7 @@ namespace Terrain {
 	public:
 	protected:
 	};
+
 
 	float dot(const Vector2&, const Vector2&);
 	Vector2 normalise(const Vector2&);

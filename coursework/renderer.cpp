@@ -125,7 +125,7 @@ void Renderer::DrawNode(SceneNode* node) {
 		Matrix4 model = node->GetWorldTransform() * Matrix4::Scale(node->GetModelScale());
 
 		glUniformMatrix4fv(glGetUniformLocation(shader->GetProgram(), "modelMatrix"), 1, false, model.values);
-		glUniform4fv(glGetUniformLocation(shader->GetProgram(), "nodeColour"), 1, (float*)&node->GetColour());
+		//glUniform4fv(glGetUniformLocation(shader->GetProgram(), "nodeColour"), 1, (float*)&node->GetColour());
 
 		GLuint texture = node->GetTexture();
 		glActiveTexture(GL_TEXTURE0);
