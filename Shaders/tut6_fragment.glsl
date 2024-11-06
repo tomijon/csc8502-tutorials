@@ -1,6 +1,7 @@
 #version 330 core
 
 uniform sampler2D diffuseTex;
+uniform int useTexture;
 
 in Vertex {
 	vec2 texCoord;
@@ -10,8 +11,9 @@ in Vertex {
 out vec4 final;
 
 void main() {
-	vec4 value = texture(diffuseTex, IN.texCoord);
+	final = IN.hue;
 
-	if (value == 0.0) discard;
-	final = value;
+	if (useTexture > 0) {
+		final *= texture(diffuseTex, IN.texCoord);
+	}
 }

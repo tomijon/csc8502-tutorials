@@ -130,7 +130,17 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="renderer.cpp" />
+    <ClCompile Include="SceneGraph.cpp" />
+    <ClCompile Include="shapes.cpp" />
     <ClCompile Include="Tutorial6.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Camera.hpp" />
+    <ClInclude Include="Renderer.h" />
+    <ClInclude Include="SceneGraph.hpp" />
+    <ClInclude Include="shapes.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

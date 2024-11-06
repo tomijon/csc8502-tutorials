@@ -2,14 +2,14 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="Header Files">
-      <UniqueIdentifier>{9afd35f9-3788-49bc-9adc-743c4f2f7681}</UniqueIdentifier>
+      <UniqueIdentifier>{e6a3bbc5-0787-4cc1-9283-6cef5def2b57}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files">
-      <UniqueIdentifier>{1a9d7213-79f7-464a-83e3-5aab8a203ff9}</UniqueIdentifier>
+      <UniqueIdentifier>{95be78a9-9cee-466f-beda-9fe39a7b6cfd}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Tutorial7.cpp">
+    <ClCompile Include="tutorial8.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Camera.cpp">
@@ -24,6 +24,9 @@
     <ClCompile Include="shapes.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="heightmap.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.hpp">
@@ -36,6 +39,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="shapes.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="heightmap.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

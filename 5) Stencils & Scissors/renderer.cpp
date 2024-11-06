@@ -72,7 +72,7 @@ void Renderer::RenderScene() {
 
 
 	BindShader(shader);
-	textureMatrix = Matrix4::Scale(Vector3(6, 6, 6));
+	textureMatrix = Matrix4::Scale(Vector3(1, 1, 1));
 	glUniform1i(glGetUniformLocation(shader->GetProgram(), "diffuseTex"), 0);
 	glActiveTexture(GL_TEXTURE0);
 	UpdateShaderMatrices();

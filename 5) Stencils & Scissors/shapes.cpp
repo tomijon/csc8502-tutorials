@@ -11,8 +11,8 @@ Triangle::Triangle() {
 
 	colours = new Vector4[numVertices]{
 		{1, 0, 0, 1},
-		{1, 0, 0, 1},
-		{1, 0, 0, 1}
+		{0, 1, 0, 1},
+		{0, 0, 1, 1}
 	};
 
 	textureCoords = new Vector2[numVertices];
