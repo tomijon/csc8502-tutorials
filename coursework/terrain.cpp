@@ -4,6 +4,7 @@
 #include "../nclgl/Mesh.h"
 
 #include "terrain.hpp"
+#include <cstdlib>
 
 using namespace Terrain;
 
@@ -20,6 +21,9 @@ NoiseGenerator::NoiseGenerator(Vector2 dimensions) {
 	randomSeed = 0;
 
 	image = new float[width * height];
+	for (int i = 0; i < width * height; i++) {
+		image[i] = 0;
+	}
 }
 
 
@@ -30,7 +34,7 @@ NoiseGenerator::~NoiseGenerator() {
 
 void NoiseGenerator::create() {
 	generate();
-	//applyDistance();
+	applyDistance();
 }
 
 
@@ -40,17 +44,17 @@ Vector2 NoiseGenerator::getGradient(int x, int y) {
 }
 
 
-float NoiseGenerator::lerp(float low, float high, float weight) {
+float NoiseGenerator::lerp(float low, float high, float weight) const {
 	return low + ((high - low) * weight);
 }
 
 
-int NoiseGenerator::pointToIndex(int x, int y) {
+int NoiseGenerator::pointToIndex(int x, int y) const {
 	return (y * width) + x;
 }
 
 
-float NoiseGenerator::fade(float val) {
+float NoiseGenerator::fade(float val) const {
 	return (6 * std::pow(val, 5)) - (15 * std::pow(val, 4)) + (10 * std::pow(val, 3));
 }
 
@@ -61,6 +65,7 @@ void NoiseGenerator::resetGradients() {
 
 
 void NoiseGenerator::generate() {
+	srand(randomSeed);
 	int currentIndex;
 	float currentHeight;
 	float lowest = std::numeric_limits<float>::max();
@@ -72,7 +77,7 @@ void NoiseGenerator::generate() {
 		for (int x = 0; x < width; x++) {
 			for (int y = 0; y < height; y++) {
 				currentIndex = pointToIndex(x, y);
-				currentHeight = amp * (1 + calculateHeight(x * freq, y * freq)) / 2.0f;
+				currentHeight = amp * (1 + calculateHeight((float)x * freq, (float)y * freq)) / 2.0f;
 				image[currentIndex] += currentHeight;
 				
 				if (image[currentIndex] < lowest) lowest = image[currentIndex];
@@ -114,17 +119,16 @@ float NoiseGenerator::calculateHeight(float x, float y) {
 	float fadeX = fade(dx);
 	float fadeY = fade(dy);
 
-	float lerp0 = lerp(dot0, dot1, dx);
-	float lerp1 = lerp(dot2, dot3, dx);
-	return lerp(lerp0, lerp1, dy);
+	float lerp0 = lerp(dot0, dot1, fadeX);
+	float lerp1 = lerp(dot2, dot3, fadeX);
+	return lerp(lerp0, lerp1, fadeY);
 }
 
 
 Vector2 NoiseGenerator::generateGradient(int x, int y) {
 	Point current = { x, y };
-	srand(randomSeed + ((x << 32) ^ y));
 
-	float angle = rand() * 2 * PI;
+	float angle = (rand() / (float)RAND_MAX) * 2 * PI;
 	Vector2 vector = Terrain::normalise(Vector2(cos(angle), sin(angle)));
 	gradients[current] = vector;
 	return vector;
@@ -137,6 +141,66 @@ void NoiseGenerator::normalise(float lowest, float highest) {
 		image[i] -= lowest;
 		image[i] /= difference;
 	}
+}
+
+
+void NoiseGenerator::applyDistance() {
+	for (int x = 0; x < width; x++) {
+		for (int z = 0; z < height; z++) {
+			float distance = getDistance(x, z);
+			image[pointToIndex(x, z)] *= 1 - (distance / (std::min(width, height) / 2.0f));
+		}
+	}
+}
+
+
+float NoiseGenerator::getDistance(int x, int z) {
+	float middleX = width / 2.0f;
+	float middleZ = height / 2.0f;
+	return std::sqrt(std::pow(x - middleX, 2) + std::powl(z - middleZ, 2));
+}
+
+
+Heightmap::Heightmap(const NoiseGenerator& noise) {
+	numVertices = noise.getWidth() * noise.getHeight();
+	numIndices = (noise.getWidth() - 1) * (noise.getHeight() - 1) * 6;
+	vertices = new Vector3[numVertices];
+	textureCoords = new Vector2[numVertices];
+	indices = new GLuint[numIndices];
+
+	Vector3 vertexScale = Vector3(16.0f, 1.0f, 16.0f);
+	Vector2 textureScale = Vector2(1.0f / 16.0f, 1.0f / 16.0f);
+
+	for (int z = 0; z < noise.getHeight(); z++) {
+		for (int x = 0; x < noise.getWidth(); x++) {
+			int index = noise.pointToIndex(x, z);
+			vertices[index] = Vector3(x, (1 << 12) * noise.getNoise()[index], z) * vertexScale;
+			textureCoords[index] = Vector2(x, z) * textureScale;
+		}
+	}
+
+	int i = 0;
+	for (int z = 0; z < noise.getHeight() - 1; z++) {
+		for (int x = 0; x < noise.getWidth() - 1; x++) {
+			int a = (z * noise.getWidth()) + x;
+			int b = (z * noise.getWidth()) + (x + 1);
+			int c = ((z + 1) * noise.getWidth()) + (x + 1);
+			int d = ((z + 1) * noise.getWidth()) + x;
+
+			indices[i++] = a;
+			indices[i++] = c;
+			indices[i++] = b;
+
+			indices[i++] = c;
+			indices[i++] = a;
+			indices[i++] = d;
+		}
+	}
+	BufferData();
+
+	heightmapSize.x = vertexScale.x * (noise.getWidth() - 1);
+	heightmapSize.y = vertexScale.y * 255.0f;
+	heightmapSize.x = vertexScale.z * (noise.getHeight() - 1);
 }
 
 

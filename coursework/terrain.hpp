@@ -1,5 +1,6 @@
 #pragma once
 
+#include <string>
 #include <unordered_map>
 
 class Vector2;
@@ -36,7 +37,9 @@ namespace Terrain {
 		~NoiseGenerator();
 		
 		void create();
-		inline float* getNoise() { return image; }
+		inline unsigned int getWidth() const { return width; }
+		inline unsigned int getHeight() const { return height; }
+		inline float* getNoise() const { return image; }
 
 		inline void setSeed(int seed) { randomSeed = seed; }
 		inline void setLayers(int l) { layers = l; }
@@ -44,11 +47,12 @@ namespace Terrain {
 		inline void setFreqMult(float mult) { freqMult = mult; }
 		inline void setAmp(float amp) { this->amp = amp; }
 		inline void setAmpMult(float mult) { ampMult = mult; }
-
+		
+		int pointToIndex(int x, int y) const;
 		Vector2 getGradient(int x, int y);
 		void resetGradients();
 
-		float fade(float val);
+		float fade(float val) const;
 
 	protected:
 		unsigned int width;
@@ -68,9 +72,8 @@ namespace Terrain {
 		void applyDistance();
 		float getDistance(int x, int y);
 		Vector2 generateGradient(int x, int y);
-		float lerp(float low, float high, float weight);
+		float lerp(float low, float high, float weight) const;
 
-		int pointToIndex(int x, int y);
 
 	private:
 		float* image;
@@ -86,7 +89,13 @@ namespace Terrain {
 
 	class Heightmap : public Mesh {
 	public:
-	private:	
+		Heightmap(const NoiseGenerator& noise);
+		~Heightmap(void) {};
+
+		Vector3 GetHeightmapSize() const { return heightmapSize; }
+
+	private:
+		Vector3 heightmapSize;
 	};
 
 

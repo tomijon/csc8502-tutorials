@@ -1,10 +1,19 @@
 #include "Renderer.h"
-#include "shapes.hpp"
+#include "terrain.hpp"
 #include <algorithm>
+#include <iostream>
 
 Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
-	heightMap = new HeightMap(TEXTUREDIR"noise.png");
-	camera = new Camera(-40, 270, Vector3());
+	Terrain::NoiseGenerator generator({ 1024, 1024 });
+	generator.setFreq(1.0f / 64.0f);
+	generator.setLayers(1);
+	generator.setAmpMult(0.5);
+	generator.setFreqMult(2);
+	generator.create();
+
+	heightMap = new Terrain::Heightmap(generator);
+	camera = new Camera(-40, 270, {0, 0, 0});
+	std::cout << camera->GetSpeed() << std::endl;
 	
 	Vector3 dimensions = heightMap->GetHeightmapSize();
 	camera->SetPosition(dimensions * Vector3(0.5, 2, 0.5));
@@ -79,7 +88,7 @@ void Renderer::UpdateScene(float msec) {
 
 
 void Renderer::SwitchToPerspective() {
-	projMatrix = Matrix4::Perspective(1, 10000, (float)width / (float)height, 45);
+	projMatrix = Matrix4::Perspective(1, 20000, (float)width / (float)height, 45);
 }
 
 
@@ -125,7 +134,8 @@ void Renderer::DrawNode(SceneNode* node) {
 		Matrix4 model = node->GetWorldTransform() * Matrix4::Scale(node->GetModelScale());
 
 		glUniformMatrix4fv(glGetUniformLocation(shader->GetProgram(), "modelMatrix"), 1, false, model.values);
-		//glUniform4fv(glGetUniformLocation(shader->GetProgram(), "nodeColour"), 1, (float*)&node->GetColour());
+		Vector4 color = node->GetColour();
+		glUniform4fv(glGetUniformLocation(shader->GetProgram(), "nodeColour"), 1, (float*)&color);
 
 		GLuint texture = node->GetTexture();
 		glActiveTexture(GL_TEXTURE0);

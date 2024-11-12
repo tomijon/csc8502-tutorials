@@ -4,7 +4,8 @@
 #include "Camera.hpp"
 #include "SceneGraph.hpp"
 #include "shapes.hpp"
-#include "heightmap.hpp"
+
+#include "terrain.hpp"
 
 class Renderer : public OGLRenderer {
 public:
@@ -27,7 +28,7 @@ protected:
 	Camera* camera;
 	SceneNode* root;
 	GLuint terrainTex;
-	HeightMap* heightMap;
+	Terrain::Heightmap* heightMap;
 
 	Frustum frameFrustum;
 

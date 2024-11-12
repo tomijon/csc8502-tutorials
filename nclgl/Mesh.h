@@ -64,6 +64,10 @@ public:
 	}
 
 
+	void GenerateNormals();
+	bool GetVertexIndicesForTri(unsigned int i, unsigned int& a, unsigned int& b, unsigned int& c) const;
+
+
 	int GetIndexForJoint(const std::string& name) const;
 	int GetParentForJoint(const std::string& name) const;
 	int GetParentForJoint(int i) const;

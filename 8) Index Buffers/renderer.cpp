@@ -3,7 +3,7 @@
 #include <algorithm>
 
 Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
-	heightMap = new HeightMap(TEXTUREDIR"noise.png");
+	heightMap = new HeightMap(TEXTUREDIR"out.png");
 	camera = new Camera(-40, 270, Vector3());
 	
 	Vector3 dimensions = heightMap->GetHeightmapSize();
@@ -54,6 +54,10 @@ void Renderer::RenderScene() {
 	BindShader(shader);
 	UpdateShaderMatrices();
 	glUniform1i(glGetUniformLocation(shader->GetProgram(), "diffuseTex"), 0);
+	Vector3 lightDirection = Vector3(500, 100, -40);
+	lightDirection.Normalise();
+	glUniform3fv(glGetUniformLocation(shader->GetProgram(), "lightDirection"), 1, (float*)&lightDirection);
+	glUniform3fv(glGetUniformLocation(shader->GetProgram(), "cameraPosition"), 1, (float*)&(camera->GetPosition()));
 
 	DrawNodes();
 	ClearNodeLists();
@@ -79,7 +83,7 @@ void Renderer::UpdateScene(float msec) {
 
 
 void Renderer::SwitchToPerspective() {
-	projMatrix = Matrix4::Perspective(1, 10000, (float)width / (float)height, 45);
+	projMatrix = Matrix4::Perspective(1, 50000, (float)width / (float)height, 45);
 }
 
 

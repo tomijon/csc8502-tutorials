@@ -15,6 +15,7 @@ HeightMap::HeightMap(const std::string& name) {
 	vertices = new Vector3[numVertices];
 	textureCoords = new Vector2[numVertices];
 	indices = new GLuint[numIndices];
+	float max = 0;
 
 	Vector3 vertexScale = Vector3(16, 1, 16);
 	Vector2 textureScale = Vector2(1.0f / 16.0f, 1.0f / 16.0f);
@@ -22,7 +23,10 @@ HeightMap::HeightMap(const std::string& name) {
 	for (int z = 0; z < iHeight; z++) {
 		for (int x = 0; x < iWidth; x++) {
 			int offset = (z * iWidth) + x;
-			vertices[offset] = Vector3(x, data[offset], z) * vertexScale;
+			vertices[offset] = Vector3(x, 8 * data[offset], z) * vertexScale;
+
+			if (vertices[offset].y > max) max = vertices[offset].y;
+
 			textureCoords[offset] = Vector2(x, z) * textureScale;
 		}
 	}
@@ -45,6 +49,7 @@ HeightMap::HeightMap(const std::string& name) {
 			indices[i++] = d;
 		}
 	}
+	GenerateNormals();
 	BufferData();
 
 	heightmapSize.x = vertexScale.x * (iWidth - 1);
