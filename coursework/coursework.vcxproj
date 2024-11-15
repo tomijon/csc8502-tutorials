@@ -137,6 +137,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Animator.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="heightmap.cpp" />
     <ClCompile Include="main.cpp" />
@@ -146,6 +147,7 @@
     <ClCompile Include="terrain.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Animator.hpp" />
     <ClInclude Include="Camera.hpp" />
     <ClInclude Include="heightmap.hpp" />
     <ClInclude Include="Renderer.h" />

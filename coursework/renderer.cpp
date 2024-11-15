@@ -13,8 +13,26 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 
 	heightMap = new Terrain::Heightmap(generator);
 	camera = new Camera(-40, 270, {0, 0, 0});
-	std::cout << camera->GetSpeed() << std::endl;
-	
+	animator = new CameraAnimator(camera);
+	animator->setFade(smoothFade);
+
+	animator->setPositionStart({ 5886.7, 3473.02, 79.0327 });
+	animator->setPitchStart(-21.59);
+	animator->setYawStart(203.57);
+	animator->setRollStart(0);
+
+	animator->addPositionStep({ 12082.1, 1936.93, 913.073 }, 15);
+	animator->addPositionStep({ 17007.7, 4550.44, 3224.58 }, 20);
+
+	animator->addPitchStep(-7.59005, 10);
+	animator->addPitchStep(-25.44, 25);
+
+	animator->addYawStep(155.757, 12);
+	animator->addYawStep(114.035, 22);
+
+	animator->addRollStep(0, 14);
+	animator->addRollStep(-65, 25);
+
 	Vector3 dimensions = heightMap->GetHeightmapSize();
 	camera->SetPosition(dimensions * Vector3(0.5, 2, 0.5));
 	
@@ -80,8 +98,12 @@ void Renderer::ClearNodeLists() {
 
 
 void Renderer::UpdateScene(float msec) {
-	camera->UpdateCamera(msec);
+	//camera->UpdateCamera(msec);
 	viewMatrix = camera->BuildViewMatrix();
+
+	std::cout << "PITCH: " << camera->GetPitch() << std::endl;
+	std::cout << "YAW: " << camera->GetYaw() << std::endl;
+	std::cout << "ROLL: " << camera->GetRoll() << std::endl << std::endl;
 	frameFrustum.FromMatrix(projMatrix * viewMatrix);
 	root->Update(msec);
 }

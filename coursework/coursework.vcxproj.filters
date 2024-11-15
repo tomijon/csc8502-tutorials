@@ -33,6 +33,12 @@
     <ClCompile Include="shapes.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="terrain.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Animator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.hpp">
@@ -50,7 +56,7 @@
     <ClInclude Include="shapes.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="terrain.hpp">
+    <ClInclude Include="Animator.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

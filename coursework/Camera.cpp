@@ -1,3 +1,4 @@
+#include <iostream>
 #include "Camera.hpp"
 #include "../nclgl/Window.h"
 
@@ -30,11 +31,21 @@ void Camera::UpdatePosition(float dt) {
 	if (Window::GetKeyboard()->KeyDown(KEYBOARD_D)) position += right * speed * dt;
 	if (Window::GetKeyboard()->KeyDown(KEYBOARD_SHIFT)) position.y -= speed * dt;
 	if (Window::GetKeyboard()->KeyDown(KEYBOARD_SPACE)) position.y += speed * dt;
+	if (Window::GetKeyboard()->KeyDown(KEYBOARD_E)) roll -= 10 * dt;
+	if (Window::GetKeyboard()->KeyDown(KEYBOARD_Q)) roll += 10 * dt;
+
+	if (Window::GetKeyboard()->KeyDown(KEYBOARD_F)) {
+		std::cout << "Position: " << position.x << ", " << position.y << ", " << position.z << std::endl;
+		std::cout << "Pitch: " << pitch << std::endl;
+		std::cout << "Yaw: " << yaw << std::endl;
+		std::cout << "Roll: " << roll << std::endl;
+	}
 }
 
 
 Matrix4 Camera::BuildViewMatrix() {
-	return	Matrix4::Rotation(-pitch, Vector3(1, 0, 0)) *
+	return Matrix4::Rotation(-roll, Vector3(0, 0, 1)) *
+		Matrix4::Rotation(-pitch, Vector3(1, 0, 0)) *
 		Matrix4::Rotation(-yaw, Vector3(0, 1, 0)) *
 		Matrix4::Translation(-position);
 }

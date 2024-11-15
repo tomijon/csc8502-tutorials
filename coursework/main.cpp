@@ -17,6 +17,7 @@ int main() {
 
 	while (w.UpdateWindow() && !Window::GetKeyboard()->KeyDown(KEYBOARD_ESCAPE)) {
 		float timestep = w.GetTimer()->GetTimeDeltaSeconds();
+		renderer.getAnimator()->update(w.GetTimer()->GetTotalTimeSeconds());
 		renderer.UpdateScene(timestep);
 		renderer.RenderScene();
 		renderer.SwapBuffers();

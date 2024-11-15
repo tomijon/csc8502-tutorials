@@ -5,9 +5,9 @@
 
 class Camera {
 public:
-	Camera(void) : pitch(0), yaw(0), speed(600) {};
+	Camera(void) : pitch(0), yaw(0), roll(0), speed(600) {};
 
-	Camera(float pitch, float yaw, Vector3 position) : pitch(pitch), yaw(yaw), speed(600), position(position) {};
+	Camera(float pitch, float yaw, Vector3 position) : pitch(pitch), yaw(yaw), roll(0), speed(600), position(position) {};
 
 	~Camera(void) {};
 
@@ -16,7 +16,7 @@ public:
 	
 	Matrix4 BuildViewMatrix();
 
-	Vector3 GetPosition() const { return position; };
+	Vector3 GetPosition() const { return position; }
 	void SetPosition(Vector3 pos) {	position = pos;	}
 
 	float GetPitch() const { return pitch; }
@@ -25,12 +25,16 @@ public:
 	float GetYaw() const { return yaw; }
 	void SetYaw(float y) { yaw = y; }
 
+	float GetRoll() const { return roll; }
+	void SetRoll(float r) { roll = r; }
+
 	float GetSpeed() const { return speed; }
 	void SetSpeed(float s) { speed = s; }
 
 protected:
 	float pitch;
 	float yaw;
+	float roll;
 	float speed;
 	Vector3 position;
 

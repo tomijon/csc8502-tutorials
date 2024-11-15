@@ -4,6 +4,7 @@
 #include "Camera.hpp"
 #include "SceneGraph.hpp"
 #include "shapes.hpp"
+#include "Animator.hpp"
 
 #include "terrain.hpp"
 
@@ -14,6 +15,7 @@ public:
 
 	void RenderScene()				override;
 	void UpdateScene(float msec)	override;
+	CameraAnimator* getAnimator() { return animator; }
 
 	void SwitchToPerspective();
 
@@ -26,6 +28,7 @@ protected:
 
 	Shader* shader;
 	Camera* camera;
+	CameraAnimator* animator;
 	SceneNode* root;
 	GLuint terrainTex;
 	Terrain::Heightmap* heightMap;
