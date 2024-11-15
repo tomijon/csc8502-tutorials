@@ -10,10 +10,10 @@ vec4 GRASS = vec4(0.75, 0.84, 0.5, 1);
 vec4 WATER = vec4(0.26, 0.52, 0.67, 1);
 
 vec4 shadowColor = vec4(0, 0, 0, 1);
-vec4 fogColor = vec4(1, 1, 1, 1);
+vec4 fogColor = vec4(124 / 255.0f, 170 / 255.0f, 220 / 255.0f, 1);
 float fogStart = 2000;
 float fogEnd = 30000;
-float fogDensity = 0.0001;
+float fogDensity = 0.01;
 float diffusePower = 0.5;
 
 in vec3 fragPosition;
@@ -27,8 +27,8 @@ void main() {
 	vec4 texture_color = texture(diffuseTex, texCoord);
 	vec4 height_color;
 
-	if (height > 0.7) height_color = SNOW;
-	else if (height > 0.5) height_color = MOUNTAIN;
+	if (height > 0.7) height_color = mix(MOUNTAIN, SNOW, (height - 0.7) / 0.3);
+	else if (height > 0.5) height_color = mix(GRASS, MOUNTAIN, (height - 0.5) / 0.2);
 	else if (height > 0.2) height_color = GRASS;
 	else height_color = WATER;
 
@@ -40,5 +40,5 @@ void main() {
 
 	final = mix(texture_color, height_color, 0.5);
 	final = mix(final, shadowColor, diffuse * diffusePower);
-	final = mix(final, fogColor, 1 - fogFactor);
+	final = mix(final, fogColor, clamp(1 - fogFactor, 0, 0.3));
 }

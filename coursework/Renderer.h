@@ -34,6 +34,7 @@ protected:
 	GLuint terrainTex;
 	PlanetSurface* surf;
 
+
 	Frustum frameFrustum;
 
 	vector<SceneNode*> transparentNodeList;

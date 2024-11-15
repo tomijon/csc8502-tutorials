@@ -3,6 +3,8 @@
 PlanetSurface::PlanetSurface(Vector3 up, int size) : up(up), size(size) {
 	axis0 = Vector3(up.y, up.z, up.x);
 	axis1 = Vector3::Cross(up, axis0);
+
+	generateMesh();
 }
 
 
@@ -21,7 +23,7 @@ void PlanetSurface::generateMesh() {
 			float zPercent = z / static_cast<float>(size - 1);
 			Vector3 vert;
 			vert += up + (axis0 * (xPercent - 0.5) * 2);
-			vert += up + (axis1 * (zPercent - 0.5) * 2);
+			vert += axis1 * (zPercent - 0.5) * 2;
 			vert.Normalise();
 			
 			vertices[(z * size) + x] = vert;
@@ -50,7 +52,7 @@ void PlanetSurface::generateMesh() {
 }
 
 
-void PlanetSurface::applyNoise(std::string name) {
+void PlanetSurface::applyNoise(std::string name, int radius) {
 	int iWidth, iHeight, iChans;
 
 	unsigned char* data = SOIL_load_image(name.c_str(), &iWidth, &iHeight, &iChans, 1);
@@ -62,7 +64,7 @@ void PlanetSurface::applyNoise(std::string name) {
 	for (int z = 0; z < size; z++) {
 		for (int x = 0; x < size; x++) {
 			int offset = (z * size) + x;
-			vertices[offset] = (vertices[offset] * 16) + (vertices[offset]) * data[offset] / 64;
+			vertices[offset] = (vertices[offset] * radius) + (vertices[offset]) * data[offset] / 32;
 		}
 	}
 
@@ -72,4 +74,21 @@ void PlanetSurface::applyNoise(std::string name) {
 	SOIL_free_image_data(data);
 	GenerateNormals();
 	BufferData();
+}
+
+
+Planet::Planet(int size, int radius) {
+	sides[0] = new PlanetSurface({ 0, -1, 0 }, size);
+	sides[1] = new PlanetSurface({ 0, 1, 0 }, size);
+	sides[2] = new PlanetSurface({ -1, 0, 0 }, size);
+	sides[3] = new PlanetSurface({ 1, 0, 0 }, size);
+	sides[4] = new PlanetSurface({ 0, 0, -1 }, size);
+	sides[5] = new PlanetSurface({ 0, 0, 1 }, size);
+
+	for (int i = 0; i < 6; i++) {
+		sides[i]->applyNoise(TEXTUREDIR"out.png", radius);
+		SceneNode* node = new SceneNode(sides[i]);
+		node->SetTexture(0);
+		AddChild(node);
+	}
 }

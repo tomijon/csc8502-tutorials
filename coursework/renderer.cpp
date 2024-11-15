@@ -13,7 +13,7 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 
 	//heightMap = new Terrain::Heightmap(generator);
 	//surf->applyNoise("out.png");
-	camera = new Camera(-50, 305, {-2, 5, 1.5});
+	camera = new Camera(-50, 305, {-200, 5, 1.5});
 	animator = new CameraAnimator(camera);
 	//animator->setFade(smoothFade);
 
@@ -42,11 +42,7 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 	if (!shader->LoadSuccess()) {
 		return;
 	}
-	
-	surf = new PlanetSurface({ 0, 1, 0 }, 2048);
-	surf->generateMesh();
-	surf->applyNoise(TEXTUREDIR"out.png");
-	
+
 	terrainTex = SOIL_load_OGL_texture(TEXTUREDIR"Barren Reds.JPG",
 			SOIL_LOAD_AUTO,SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS);
 	if (!terrainTex) {
@@ -57,10 +53,7 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 	SwitchToPerspective();
 	
 	root = new SceneNode();
-	SceneNode* temp = new SceneNode(surf);
-	temp->SetTexture(terrainTex);
-	root->AddChild(temp);
-	root->SetBoundingRadius(100000);
+	root->AddChild(new Planet(2048, 128));
 
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);

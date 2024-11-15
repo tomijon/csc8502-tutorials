@@ -24,13 +24,14 @@ void Camera::UpdatePosition(float dt) {
 
 	Vector3 forward = rotation * Vector3(0, 0, -1);
 	Vector3 right = rotation * Vector3(1, 0, 0);
+	Vector3 up = rotation * Vector3(0, 1, 0);
 
 	if (Window::GetKeyboard()->KeyDown(KEYBOARD_W)) position += forward * speed * dt;
 	if (Window::GetKeyboard()->KeyDown(KEYBOARD_S)) position -= forward * speed * dt;
 	if (Window::GetKeyboard()->KeyDown(KEYBOARD_A)) position -= right * speed * dt;
 	if (Window::GetKeyboard()->KeyDown(KEYBOARD_D)) position += right * speed * dt;
-	if (Window::GetKeyboard()->KeyDown(KEYBOARD_SHIFT)) position.y -= speed * dt;
-	if (Window::GetKeyboard()->KeyDown(KEYBOARD_SPACE)) position.y += speed * dt;
+	if (Window::GetKeyboard()->KeyDown(KEYBOARD_SHIFT)) position -= up * speed * dt;
+	if (Window::GetKeyboard()->KeyDown(KEYBOARD_SPACE)) position += up * speed * dt;
 	if (Window::GetKeyboard()->KeyDown(KEYBOARD_E)) roll -= 10 * dt;
 	if (Window::GetKeyboard()->KeyDown(KEYBOARD_Q)) roll += 10 * dt;
 
