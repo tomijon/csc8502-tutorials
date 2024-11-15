@@ -5,6 +5,7 @@
 #include "SceneGraph.hpp"
 #include "shapes.hpp"
 #include "Animator.hpp"
+#include "Planet.hpp"
 
 #include "terrain.hpp"
 
@@ -31,7 +32,7 @@ protected:
 	CameraAnimator* animator;
 	SceneNode* root;
 	GLuint terrainTex;
-	Terrain::Heightmap* heightMap;
+	PlanetSurface* surf;
 
 	Frustum frameFrustum;
 

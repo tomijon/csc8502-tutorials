@@ -5,9 +5,9 @@
 
 class Camera {
 public:
-	Camera(void) : pitch(0), yaw(0), roll(0), speed(600) {};
+	Camera(void) : pitch(0), yaw(0), roll(0), speed(2) {};
 
-	Camera(float pitch, float yaw, Vector3 position) : pitch(pitch), yaw(yaw), roll(0), speed(600), position(position) {};
+	Camera(float pitch, float yaw, Vector3 position) : pitch(pitch), yaw(yaw), roll(0), speed(2), position(position) {};
 
 	~Camera(void) {};
 

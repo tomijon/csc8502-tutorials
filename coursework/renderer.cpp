@@ -4,43 +4,48 @@
 #include <iostream>
 
 Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
-	Terrain::NoiseGenerator generator({ 1024, 1024 });
-	generator.setFreq(1.0f / 64.0f);
-	generator.setLayers(1);
-	generator.setAmpMult(0.5);
-	generator.setFreqMult(2);
-	generator.create();
+	//Terrain::NoiseGenerator generator({ 1024, 1024 });
+	//generator.setFreq(1.0f / 64.0f);
+	//generator.setLayers(1);
+	//generator.setAmpMult(0.5);
+	//generator.setFreqMult(2);
+	//generator.create();
 
-	heightMap = new Terrain::Heightmap(generator);
-	camera = new Camera(-40, 270, {0, 0, 0});
+	//heightMap = new Terrain::Heightmap(generator);
+	//surf->applyNoise("out.png");
+	camera = new Camera(-50, 305, {-2, 5, 1.5});
 	animator = new CameraAnimator(camera);
-	animator->setFade(smoothFade);
+	//animator->setFade(smoothFade);
 
-	animator->setPositionStart({ 5886.7, 3473.02, 79.0327 });
-	animator->setPitchStart(-21.59);
-	animator->setYawStart(203.57);
-	animator->setRollStart(0);
+	//animator->setPositionStart({ 5886.7, 3473.02, 79.0327 });
+	//animator->setPitchStart(-21.59);
+	//animator->setYawStart(203.57);
+	//animator->setRollStart(0);
 
-	animator->addPositionStep({ 12082.1, 1936.93, 913.073 }, 15);
-	animator->addPositionStep({ 17007.7, 4550.44, 3224.58 }, 20);
+	//animator->addPositionStep({ 12082.1, 1936.93, 913.073 }, 15);
+	//animator->addPositionStep({ 17007.7, 4550.44, 3224.58 }, 20);
 
-	animator->addPitchStep(-7.59005, 10);
-	animator->addPitchStep(-25.44, 25);
+	//animator->addPitchStep(-7.59005, 10);
+	//animator->addPitchStep(-25.44, 25);
 
-	animator->addYawStep(155.757, 12);
-	animator->addYawStep(114.035, 22);
+	//animator->addYawStep(155.757, 12);
+	//animator->addYawStep(114.035, 22);
 
-	animator->addRollStep(0, 14);
-	animator->addRollStep(-65, 25);
+	//animator->addRollStep(0, 14);
+	//animator->addRollStep(-65, 25);
 
-	Vector3 dimensions = heightMap->GetHeightmapSize();
-	camera->SetPosition(dimensions * Vector3(0.5, 2, 0.5));
+	//Vector3 dimensions = { 1024, 1024, 1024 };
+	//camera->SetPosition(dimensions * Vector3(0.5, 2, 0.5));
 	
 	shader = new Shader("tut8_vertex.glsl ",
 			"tut8_fragment.glsl");
 	if (!shader->LoadSuccess()) {
 		return;
 	}
+	
+	surf = new PlanetSurface({ 0, 1, 0 }, 2048);
+	surf->generateMesh();
+	surf->applyNoise(TEXTUREDIR"out.png");
 	
 	terrainTex = SOIL_load_OGL_texture(TEXTUREDIR"Barren Reds.JPG",
 			SOIL_LOAD_AUTO,SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS);
@@ -52,9 +57,10 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 	SwitchToPerspective();
 	
 	root = new SceneNode();
-	root->SetMesh(heightMap);
-	root->SetTexture(terrainTex);
-	root->SetBoundingRadius(std::max(dimensions.x, dimensions.z) * 16);
+	SceneNode* temp = new SceneNode(surf);
+	temp->SetTexture(terrainTex);
+	root->AddChild(temp);
+	root->SetBoundingRadius(100000);
 
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
@@ -67,7 +73,6 @@ Renderer::~Renderer() {
 	delete shader;
 	delete camera;
 	delete root;
-	delete heightMap;
 	glDeleteTextures(1, &terrainTex);
 }
 
@@ -81,6 +86,12 @@ void Renderer::RenderScene() {
 	BindShader(shader);
 	UpdateShaderMatrices();
 	glUniform1i(glGetUniformLocation(shader->GetProgram(), "diffuseTex"), 0);
+	Vector3 lightDirection = Vector3(500, 100, -40);
+	lightDirection.Normalise();
+	Vector3 pos = camera->GetPosition();
+	glUniform3fv(glGetUniformLocation(shader->GetProgram(), "lightDirection"), 1, (float*)&lightDirection);
+	glUniform3fv(glGetUniformLocation(shader->GetProgram(), "cameraPosition"), 1, (float*)&pos);
+
 
 	DrawNodes();
 	ClearNodeLists();
@@ -101,9 +112,6 @@ void Renderer::UpdateScene(float msec) {
 	//camera->UpdateCamera(msec);
 	viewMatrix = camera->BuildViewMatrix();
 
-	std::cout << "PITCH: " << camera->GetPitch() << std::endl;
-	std::cout << "YAW: " << camera->GetYaw() << std::endl;
-	std::cout << "ROLL: " << camera->GetRoll() << std::endl << std::endl;
 	frameFrustum.FromMatrix(projMatrix * viewMatrix);
 	root->Update(msec);
 }

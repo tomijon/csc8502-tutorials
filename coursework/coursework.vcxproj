@@ -141,6 +141,7 @@
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="heightmap.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Planet.cpp" />
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="SceneGraph.cpp" />
     <ClCompile Include="shapes.cpp" />
@@ -150,6 +151,7 @@
     <ClInclude Include="Animator.hpp" />
     <ClInclude Include="Camera.hpp" />
     <ClInclude Include="heightmap.hpp" />
+    <ClInclude Include="Planet.hpp" />
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="SceneGraph.hpp" />
     <ClInclude Include="shapes.hpp" />

@@ -2,7 +2,7 @@
 #include "Renderer.h"
 
 int main() {
-	Window w("Index Buffers!", 1280, 720, false);
+	Window w("Coursework!", 1280, 720, false);
 	if (!w.HasInitialised()) {
 		return -1;
 	}
@@ -17,7 +17,7 @@ int main() {
 
 	while (w.UpdateWindow() && !Window::GetKeyboard()->KeyDown(KEYBOARD_ESCAPE)) {
 		float timestep = w.GetTimer()->GetTimeDeltaSeconds();
-		renderer.getAnimator()->update(w.GetTimer()->GetTotalTimeSeconds());
+		renderer.getAnimator()->update(w.GetTimer()->GetTotalTimeSeconds(), timestep);
 		renderer.UpdateScene(timestep);
 		renderer.RenderScene();
 		renderer.SwapBuffers();

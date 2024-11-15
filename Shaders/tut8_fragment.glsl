@@ -38,7 +38,6 @@ void main() {
 	float fogFactor = exp(-fogDensity * dist);
 
 
-
 	final = mix(texture_color, height_color, 0.5);
 	final = mix(final, shadowColor, diffuse * diffusePower);
 	final = mix(final, fogColor, 1 - fogFactor);

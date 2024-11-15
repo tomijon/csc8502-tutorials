@@ -15,7 +15,7 @@ out float height;
 
 void main() {
 	fragPosition = vec3(modelMatrix * vec4(positionIn, 1.0));
-	height = positionIn.y / 2768.0f;
+	height = (length(positionIn) - (length(normalize(positionIn))) * 16) / 4;
 	normal = normalIn;
 
 	mat4 mvp = projMatrix * viewMatrix * modelMatrix;

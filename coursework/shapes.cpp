@@ -130,6 +130,7 @@ bool Plane::SphereInPlane(const Vector3& position, float radius) const {
 
 
 bool Frustum::InsideFrustum(SceneNode& node) {
+	return true;
 	for (int p = 0; p < 6; p++) {
 		if (!planes[p].SphereInPlane(node.GetWorldTransform().GetPositionVector(), node.GetBoundingRadius())) return false;
 	}

@@ -1,64 +1,110 @@
 #include "Animator.hpp"
+#include "../nclgl/Window.h"
 
 
-void CameraAnimator::update(double now) {
+void CameraAnimator::update(double now, float dt) {
 	updatePosition(now);
 	updatePitch(now);
 	updateYaw(now);
 	updateRoll(now);
 
 	float weight;
+	
+	if (!positionEnd) {
+		weight = fade(positionLast.getEndTime(), now, positionTarget.getEndTime());
+		Vector3 newPos = lerp<Vector3>(positionLast.getValue(), positionTarget.getValue(), weight);
+		camera->SetPosition(newPos);
+	}
 
-	weight = fade(positionLast.getEndTime(), now, positionTarget.getEndTime());
-	Vector3 newPos = lerp<Vector3>(positionLast.getValue(), positionTarget.getValue(), weight);
-	camera->SetPosition(newPos);
+	if (!pitchEnd) {
+		weight = fade(pitchLast.getEndTime(), now, pitchTarget.getEndTime());
+		float newPitch = lerp<float>(pitchLast.getValue(), pitchTarget.getValue(), weight);
+		camera->SetPitch(newPitch);
+	}
 
-	weight = fade(pitchLast.getEndTime(), now, pitchTarget.getEndTime());
-	float newPitch = lerp<float>(pitchLast.getValue(), pitchTarget.getValue(), weight);
-	camera->SetPitch(newPitch);
+	if (!yawEnd) {
+		weight = fade(yawLast.getEndTime(), now, yawTarget.getEndTime());
+		float newYaw = lerp<float>(yawLast.getValue(), yawTarget.getValue(), weight);
+		camera->SetYaw(newYaw);
+	}
 
-	weight = fade(yawLast.getEndTime(), now, yawTarget.getEndTime());
-	float newYaw = lerp<float>(yawLast.getValue(), yawTarget.getValue(), weight);
-	camera->SetYaw(newYaw);
+	if (!rollEnd) {
+		weight = fade(rollLast.getEndTime(), now, rollTarget.getEndTime());
+		float newRoll = lerp<float>(rollLast.getValue(), rollTarget.getValue(), weight);
+		camera->SetRoll(newRoll);
+	}
 
-	weight = fade(rollLast.getEndTime(), now, rollTarget.getEndTime());
-	float newRoll = lerp<float>(rollLast.getValue(), rollTarget.getValue(), weight);
-	camera->SetRoll(newRoll);
-}
-
-
-void CameraAnimator::updatePosition(double now) {
-	if (now > positionTarget.getEndTime() && !positions.empty()) {
-		positionLast = positionTarget;
-		positionTarget = positions.front();
-		positions.pop();
+	if (!(positionEnd && pitchEnd && yawEnd && rollEnd)) {
+		if (Window::GetKeyboard()->KeyDown(KEYBOARD_SPACE)) {
+			positionEnd = true;
+			pitchEnd = true;
+			yawEnd = true;
+			rollEnd = true;
+		}
+	}
+	else {
+		camera->UpdateCamera(dt);
 	}
 }
 
 
+void CameraAnimator::updatePosition(double now) {
+	if (now > positionTarget.getEndTime()) {
+		positionLast = positionTarget;
+
+		if (!positions.empty()) {
+			positionTarget = positions.front();
+			positions.pop();
+		}
+		else {
+			positionEnd = true;
+		}
+	}
+	
+}
+
+
 void CameraAnimator::updatePitch(double now) {
-	if (now > pitchTarget.getEndTime() && !pitch.empty()) {
+	if (now > pitchTarget.getEndTime()) {
 		pitchLast = pitchTarget;
-		pitchTarget = pitch.front();
-		pitch.pop();
+
+		if (!pitch.empty()) {
+			pitchTarget = pitch.front();
+			pitch.pop();
+		}
+		else {
+			pitchEnd = true;
+		}
 	}
 }
 
 
 void CameraAnimator::updateYaw(double now) {
-	if (now > yawTarget.getEndTime() && !yaw.empty()) {
+	if (now > yawTarget.getEndTime()) {
 		yawLast = yawTarget;
-		yawTarget = yaw.front();
-		yaw.pop();
+
+		if (!yaw.empty()) {
+			yawTarget = yaw.front();
+			yaw.pop();
+		}
+		else {
+			yawEnd = true;
+		}
 	}
 }
 
 
 void CameraAnimator::updateRoll(double now) {
-	if (now > rollTarget.getEndTime() && !roll.empty()) {
+	if (now > rollTarget.getEndTime()) {
 		rollLast = rollTarget;
-		rollTarget = roll.front();
-		roll.pop();
+
+		if (!roll.empty()) {
+			rollTarget = roll.front();
+			roll.pop();
+		}
+		else {
+			rollEnd = true;
+		}
 	}
 }
 
