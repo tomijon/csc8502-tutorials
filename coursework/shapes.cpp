@@ -29,26 +29,32 @@ Quad::Quad() {
 	numIndices = 4;
 
 	vertices = new Vector3[numVertices]{
-		{0, 0, 0},
-		{1, 0, 0},
-		{0, 1, 0},
-		{1, 1, 0}
+		{-1, 1, 0},
+		{-1, -1, 0},
+		{1, 1, 0},
+		{1, -1, 0}
 	};
 
 	indices = new unsigned int[numIndices] {
 		0, 1, 2, 3
 	};
 
-	colours = new Vector4[numVertices];
-	for (int i = 0; i < numVertices; i++) {
-		colours[i] = { 1, 1, 1, 1 };
-	}
 
 	textureCoords = new Vector2[numVertices];
 	textureCoords[0] = { 0, 0 };
 	textureCoords[1] = { 1, 0 };
 	textureCoords[2] = { 0, 1 };
 	textureCoords[3] = { 1, 1 };
+
+	colours = new Vector4[numVertices];
+	normals = new Vector3[numVertices]; 
+	tangents = new Vector4[numVertices];
+
+	for (int i = 0; i < 4; ++i) {
+	    colours[i] = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+		normals[i] = Vector3(0.0f, 0.0f, -1.0f); 
+		tangents[i] = Vector4(1.0f, 0.0f, 0.0f, 1.0f);
+	}
 
 	type = GL_TRIANGLE_STRIP;
 	BufferData();

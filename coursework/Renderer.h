@@ -26,13 +26,17 @@ protected:
 	void ClearNodeLists();
 	void DrawNodes();
 	void DrawNode(SceneNode* node);
+	void DrawSkybox();
 
 	Shader* shader;
+	Shader* skyboxShader;
 	Camera* camera;
 	CameraAnimator* animator;
 	SceneNode* root;
 	GLuint terrainTex;
+	GLuint skybox;
 	PlanetSurface* surf;
+	Mesh* quad;
 
 
 	Frustum frameFrustum;

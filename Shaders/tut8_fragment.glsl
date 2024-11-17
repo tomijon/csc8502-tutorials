@@ -14,7 +14,7 @@ vec4 fogColor = vec4(124 / 255.0f, 170 / 255.0f, 220 / 255.0f, 1);
 float fogStart = 2000;
 float fogEnd = 30000;
 float fogDensity = 0.01;
-float diffusePower = 0.5;
+float diffusePower = 0.9;
 
 in vec3 fragPosition;
 in vec3 normal;
@@ -24,6 +24,9 @@ in float height;
 out vec4 final;
 
 void main() {
+
+
+
 	vec4 texture_color = texture(diffuseTex, texCoord);
 	vec4 height_color;
 

@@ -8,6 +8,13 @@ PlanetSurface::PlanetSurface(Vector3 up, int size) : up(up), size(size) {
 }
 
 
+void PlanetSurface::setRadius(float radius) {
+	for (int i = 0; i < numVertices; i++) {
+		vertices[i] = vertices[i] * radius;
+	}
+}
+
+
 void PlanetSurface::generateMesh() {
 	numVertices = size * size;
 	numIndices = std::pow(size - 1, 2) * 6;
@@ -52,7 +59,7 @@ void PlanetSurface::generateMesh() {
 }
 
 
-void PlanetSurface::applyNoise(std::string name, int radius) {
+void PlanetSurface::applyNoise(std::string name, float radius) {
 	int iWidth, iHeight, iChans;
 
 	unsigned char* data = SOIL_load_image(name.c_str(), &iWidth, &iHeight, &iChans, 1);
@@ -64,7 +71,7 @@ void PlanetSurface::applyNoise(std::string name, int radius) {
 	for (int z = 0; z < size; z++) {
 		for (int x = 0; x < size; x++) {
 			int offset = (z * size) + x;
-			vertices[offset] = (vertices[offset] * radius) + (vertices[offset]) * data[offset] / 32;
+			vertices[offset] += (vertices[offset]).Normalised() * data[offset] / 32;
 		}
 	}
 
@@ -72,12 +79,10 @@ void PlanetSurface::applyNoise(std::string name, int radius) {
 	//	vertices[vert] = vertices[vert] * data[vert] * 255;
 	//}
 	SOIL_free_image_data(data);
-	GenerateNormals();
-	BufferData();
 }
 
 
-Planet::Planet(int size, int radius) {
+Planet::Planet(int size, int radius, std::string noise) {
 	sides[0] = new PlanetSurface({ 0, -1, 0 }, size);
 	sides[1] = new PlanetSurface({ 0, 1, 0 }, size);
 	sides[2] = new PlanetSurface({ -1, 0, 0 }, size);
@@ -86,9 +91,38 @@ Planet::Planet(int size, int radius) {
 	sides[5] = new PlanetSurface({ 0, 0, 1 }, size);
 
 	for (int i = 0; i < 6; i++) {
-		sides[i]->applyNoise(TEXTUREDIR"out.png", radius);
+		sides[i]->setRadius(radius);
+
+		if (noise != "") {
+			sides[i]->applyNoise(noise, radius);
+		}
+
+		sides[i]->doBufferStuff();
 		SceneNode* node = new SceneNode(sides[i]);
 		node->SetTexture(0);
 		AddChild(node);
+	}
+}
+
+
+void Planet::Update(float dt) {
+	//yaw += 10 * dt;
+	//yaw = yaw > 360 ? yaw - 360 : yaw;
+
+	//position += Vector3(10, 0, 0) * dt;
+
+	scale = { 1, 1, 1 };
+
+	transform = Matrix4::Translation(position) * Matrix4::Scale(scale) * Matrix4::Rotation(yaw, { 0, 1, 0 });
+
+	if (parent) {
+		worldTransform = parent->GetWorldTransform() * transform;
+	}
+	else {
+		worldTransform = transform;
+	}
+
+	for (vector<SceneNode*>::iterator i = children.begin(); i != children.end(); i++) {
+		(*i)->Update(dt);
 	}
 }

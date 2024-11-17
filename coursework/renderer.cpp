@@ -48,15 +48,31 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 	if (!terrainTex) {
 		return;
 	}
+
+	quad = new Quad();
+	skybox = SOIL_load_OGL_cubemap(
+		TEXTUREDIR"space/nx.png",TEXTUREDIR"space/px.png",
+		TEXTUREDIR"space/py.png",TEXTUREDIR"space/ny.png",
+		TEXTUREDIR"space/nz.png",TEXTUREDIR"space/pz.png",
+		SOIL_LOAD_RGB, SOIL_CREATE_NEW_ID, 0);
+	if (!skybox) return;
+	skyboxShader = new Shader("skybox_vertex.glsl", "skybox_fragment.glsl");
+	if (!skyboxShader->LoadSuccess()) return;
 	
 	SetTextureRepeating(terrainTex,true);
 	SwitchToPerspective();
 	
 	root = new SceneNode();
-	root->AddChild(new Planet(2048, 128));
+	root->AddChild(new Planet(2048, 128, TEXTUREDIR"out.png"));
+	root->AddChild(new Planet(1024, 129));
+
 
 	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_BLEND);
 	glEnable(GL_CULL_FACE);
+	glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+	glDepthFunc(GL_LESS);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glCullFace(GL_BACK);
 	init = true;
 }
@@ -66,6 +82,8 @@ Renderer::~Renderer() {
 	delete shader;
 	delete camera;
 	delete root;
+	delete skyboxShader;
+
 	glDeleteTextures(1, &terrainTex);
 }
 
@@ -75,6 +93,7 @@ void Renderer::RenderScene() {
 	SortNodeLists();
 
 	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+	DrawSkybox();
 	
 	BindShader(shader);
 	UpdateShaderMatrices();
@@ -166,4 +185,16 @@ void Renderer::DrawNode(SceneNode* node) {
 		
 		node->Draw(*this);
 	}
+}
+
+
+void Renderer::DrawSkybox() {
+	glDepthMask(GL_FALSE);
+
+	BindShader(skyboxShader);
+	UpdateShaderMatrices();
+
+	quad->Draw();
+
+	glDepthMask(GL_TRUE);
 }
