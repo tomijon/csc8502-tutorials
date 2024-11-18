@@ -24,6 +24,9 @@ public:
 
 	Mesh* GetMesh() const { return mesh; }
 	void SetMesh(Mesh* m) { mesh = m; }
+
+	Shader* GetShader() const { return shader; }
+	void SetShader(Shader* s) { shader = s; }
 	
 	void AddChild(SceneNode* s);
 
@@ -33,11 +36,24 @@ public:
 	float GetBoundingRadius() const { return boundingRadius; }
 	void SetBoundingRadius(float f) { boundingRadius = f; }
 
+	float GetDrawDistance() const { return drawDistance; }
+	void SetDrawDistance(float f) { drawDistance = f; }
+
 	float GetCameraDistance() const { return distanceFromCamera; }
 	void SetCameraDistance(float f) { distanceFromCamera = f; }
 
-	void SetTexture(GLuint tex) { texture = tex; }
-	GLuint GetTexture() const { return texture; }
+	virtual void AddTexture(std::string uniformName, GLuint texture, GLuint bump = 0) {
+		names.push_back(uniformName);
+		textures.push_back(texture);
+		bumps.push_back(bump);
+	}
+
+	std::vector<GLuint>::const_iterator GetTextureIteratorStart() { return textures.begin(); }
+	std::vector<GLuint>::const_iterator GetTextureIteratorEnd() { return textures.end(); }
+	std::vector<GLuint>::const_iterator GetBumpIteratorStart() { return bumps.begin(); }
+	std::vector<GLuint>::const_iterator GetBumpIteratorEnd() { return bumps.end(); }
+	std::vector<std::string>::const_iterator GetNameIteratorStart() { return names.begin(); }
+	std::vector<std::string>::const_iterator GetNameIteratorEnd() { return names.end(); }
 
 	static bool CompareByCameraDistance(SceneNode* a, SceneNode* b) {
 		return (a->distanceFromCamera < b->distanceFromCamera);
@@ -49,6 +65,7 @@ public:
 protected:
 	SceneNode* parent;
 	Mesh* mesh;
+	Shader* shader;
 	Matrix4 worldTransform;
 	Matrix4 transform;
 	Vector3 modelScale;
@@ -56,6 +73,9 @@ protected:
 	std::vector<SceneNode*> children;
 
 	float distanceFromCamera;
+	float drawDistance;
 	float boundingRadius;
-	GLuint texture;
+	std::vector<std::string> names;
+	std::vector<GLuint> textures;
+	std::vector<GLuint> bumps;
 };

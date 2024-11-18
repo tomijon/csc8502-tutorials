@@ -33,11 +33,13 @@ protected:
 	Camera* camera;
 	CameraAnimator* animator;
 	SceneNode* root;
-	GLuint terrainTex;
+	GLuint textures[9];
 	GLuint skybox;
-	PlanetSurface* surf;
 	Mesh* quad;
 
+	Planet* planet;
+	Planet* water;
+	Planet* sun;
 
 	Frustum frameFrustum;
 

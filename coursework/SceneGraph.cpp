@@ -6,7 +6,7 @@ SceneNode::SceneNode(Mesh* mesh, Vector4 colour) : mesh(mesh), colour(colour) {
 
 	boundingRadius = 1;
 	distanceFromCamera = 0;
-	texture = 0;
+	drawDistance = 0;
 }
 
 

@@ -30,10 +30,18 @@ private:
 
 class Planet : public SceneNode {
 public:
-	Planet(int size, int radius, std::string noise = "");
+	Planet(int size, int radius, Shader* shader, std::string noise = "");
 	~Planet() { delete[] sides; }
 
 	virtual void Update(float dt) override;
+	void AddTexture(std::string uniformName, GLuint texture, GLuint bump = 0) override {
+		for (auto child = GetChildIteratorStart(); child != GetChildIteratorEnd(); child++) {
+			(*child)->AddTexture(uniformName, texture, bump);
+		}
+	}
+
+	void setPosition(Vector3 p) { position = p; }
+	Vector3 getPosition() const { return position; }
 
 private:
 	PlanetSurface* sides[6];

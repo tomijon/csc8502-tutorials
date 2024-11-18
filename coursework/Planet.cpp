@@ -1,3 +1,4 @@
+#include <string>
 #include "Planet.hpp"
 
 PlanetSurface::PlanetSurface(Vector3 up, int size) : up(up), size(size) {
@@ -82,7 +83,7 @@ void PlanetSurface::applyNoise(std::string name, float radius) {
 }
 
 
-Planet::Planet(int size, int radius, std::string noise) {
+Planet::Planet(int size, int radius, Shader* shader, std::string noise) {
 	sides[0] = new PlanetSurface({ 0, -1, 0 }, size);
 	sides[1] = new PlanetSurface({ 0, 1, 0 }, size);
 	sides[2] = new PlanetSurface({ -1, 0, 0 }, size);
@@ -94,20 +95,22 @@ Planet::Planet(int size, int radius, std::string noise) {
 		sides[i]->setRadius(radius);
 
 		if (noise != "") {
-			sides[i]->applyNoise(noise, radius);
+			sides[i]->applyNoise(noise + "noise/" + std::to_string(i) + ".png", radius);
 		}
 
 		sides[i]->doBufferStuff();
 		SceneNode* node = new SceneNode(sides[i]);
-		node->SetTexture(0);
+		node->SetShader(shader);
+		node->SetBoundingRadius(radius);
+		node->SetDrawDistance(2048 * radius * 4);
 		AddChild(node);
 	}
 }
 
 
 void Planet::Update(float dt) {
-	//yaw += 10 * dt;
-	//yaw = yaw > 360 ? yaw - 360 : yaw;
+	yaw += 3 * dt;
+	yaw = yaw > 360 ? yaw - 360 : yaw;
 
 	//position += Vector3(10, 0, 0) * dt;
 
