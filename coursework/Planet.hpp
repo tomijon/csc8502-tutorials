@@ -17,7 +17,7 @@ public:
 	void generateMesh();
 	void setRadius(float radius);
 	void applyNoise(std::string name, float radius);
-	void doBufferStuff() { GenerateNormals(); BufferData(); }
+	void doBufferStuff() { GenerateNormals(); GenerateTangents(); BufferData(); }
 
 private:
 	Vector3 up;

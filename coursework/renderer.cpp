@@ -53,21 +53,22 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 	Shader* sunShader = new Shader("planet_vertex.glsl", "sun_fragment.glsl");
 
 	BindShader(planetShader);
-	glUniform1f(glGetUniformLocation(planetShader->GetProgram(), "snowHeightStart"), 0.8);
+	glUniform1f(glGetUniformLocation(planetShader->GetProgram(), "snowHeightStart"), 0.9);
 	glUniform1f(glGetUniformLocation(planetShader->GetProgram(), "mountainHeightStart"), 0.5);
 	glUniform1f(glGetUniformLocation(planetShader->GetProgram(), "grassHeightStart"), 0.2);
 
 	glUniform1f(glGetUniformLocation(planetShader->GetProgram(), "diffusePower"), 0.8);
-	glUniform1f(glGetUniformLocation(planetShader->GetProgram(), "specularPower"), 1);
-	glUniform1f(glGetUniformLocation(planetShader->GetProgram(), "ambientPower"), 0.2);
+	glUniform1f(glGetUniformLocation(planetShader->GetProgram(), "specularPower"), 16);
+	glUniform1f(glGetUniformLocation(planetShader->GetProgram(), "specularWeight"), 0.5);
+	glUniform1f(glGetUniformLocation(planetShader->GetProgram(), "ambientPower"), 0.1);
 
 	Vector4 shadowColor(0, 0, 0, 1);
 	Vector4 ambientColor(1, 1, 1, 1);
 	Vector4 specularColor(1, 1, 1, 1);
 
-	glUniform4fv(glGetUniformLocation(planetShader->GetProgram(), "shadowColor"), 4, &Vector4(0, 0, 0, 1));
-
-
+	glUniform4fv(glGetUniformLocation(planetShader->GetProgram(), "shadowColor"), 1, (float*)&shadowColor);
+	glUniform4fv(glGetUniformLocation(planetShader->GetProgram(), "ambientColor"), 1, (float*)&ambientColor);
+	glUniform4fv(glGetUniformLocation(planetShader->GetProgram(), "specularColor"), 1, (float*)&specularColor);
 
 
 	planet = new Planet(512, 128, planetShader, TEXTUREDIR"planet/");
