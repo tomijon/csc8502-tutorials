@@ -139,18 +139,15 @@
   <ItemGroup>
     <ClCompile Include="Animator.cpp" />
     <ClCompile Include="Camera.cpp" />
-    <ClCompile Include="heightmap.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Planet.cpp" />
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="SceneGraph.cpp" />
     <ClCompile Include="shapes.cpp" />
-    <ClCompile Include="terrain.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Animator.hpp" />
     <ClInclude Include="Camera.hpp" />
-    <ClInclude Include="heightmap.hpp" />
     <ClInclude Include="Planet.hpp" />
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="SceneGraph.hpp" />

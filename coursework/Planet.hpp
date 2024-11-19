@@ -43,6 +43,15 @@ public:
 	void setPosition(Vector3 p) { position = p; }
 	Vector3 getPosition() const { return position; }
 
+	void removeMesh() {
+		for (SceneNode* child : children) {
+			delete child->GetMesh();
+			child->SetMesh(0);
+		}
+	}
+
+	void setScale(Vector3 s) { scale = s; }
+
 private:
 	PlanetSurface* sides[6];
 

@@ -1,13 +1,12 @@
 #pragma once
 
 #include "../nclgl/OGLRenderer.h"
+#include "../nclgl/Window.h"
 #include "Camera.hpp"
 #include "SceneGraph.hpp"
 #include "shapes.hpp"
 #include "Animator.hpp"
 #include "Planet.hpp"
-
-#include "terrain.hpp"
 
 class Renderer : public OGLRenderer {
 public:
@@ -19,6 +18,7 @@ public:
 	CameraAnimator* getAnimator() { return animator; }
 
 	void SwitchToPerspective();
+	void applyTimeSkip();
 
 protected:
 	void BuildNodeLists(SceneNode* from);
@@ -28,12 +28,14 @@ protected:
 	void DrawNode(SceneNode* node);
 	void DrawSkybox();
 
+	Window& parent;
+
 	Shader* shader;
 	Shader* skyboxShader;
 	Camera* camera;
 	CameraAnimator* animator;
 	SceneNode* root;
-	GLuint textures[9];
+	GLuint textures[11];
 	GLuint skybox;
 	Mesh* quad;
 

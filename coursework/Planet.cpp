@@ -84,12 +84,15 @@ void PlanetSurface::applyNoise(std::string name, float radius) {
 
 
 Planet::Planet(int size, int radius, Shader* shader, std::string noise) {
+	this->shader = shader;
 	sides[0] = new PlanetSurface({ 0, -1, 0 }, size);
 	sides[1] = new PlanetSurface({ 0, 1, 0 }, size);
 	sides[2] = new PlanetSurface({ -1, 0, 0 }, size);
 	sides[3] = new PlanetSurface({ 1, 0, 0 }, size);
 	sides[4] = new PlanetSurface({ 0, 0, -1 }, size);
 	sides[5] = new PlanetSurface({ 0, 0, 1 }, size);
+
+	scale = { 1, 1, 1 };
 
 	for (int i = 0; i < 6; i++) {
 		sides[i]->setRadius(radius);
@@ -113,8 +116,6 @@ void Planet::Update(float dt) {
 	yaw = yaw > 360 ? yaw - 360 : yaw;
 
 	//position += Vector3(10, 0, 0) * dt;
-
-	scale = { 1, 1, 1 };
 
 	transform = Matrix4::Translation(position) * Matrix4::Scale(scale) * Matrix4::Rotation(yaw, { 0, 1, 0 });
 

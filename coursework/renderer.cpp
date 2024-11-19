@@ -1,9 +1,8 @@
 #include "Renderer.h"
-#include "terrain.hpp"
 #include <algorithm>
 #include <iostream>
 
-Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
+Renderer::Renderer(Window& parent) : OGLRenderer(parent), parent(parent) {
 	camera = new Camera(-50, 305, {-200, 5, 1.5});
 	animator = new CameraAnimator(camera);
 	animator->setFade(smoothFade);
@@ -27,8 +26,17 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 		SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS);
 	textures[8] = SOIL_load_OGL_texture(TEXTUREDIR"sun/textures/lava_texture.JPG",
 		SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS);
+	textures[9] = SOIL_load_OGL_texture(TEXTUREDIR"waterbump.PNG",
+		SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS);
+
+	//int width, height, channels;
+	//unsigned char* image = SOIL_load_image(TEXTUREDIR"sun/textures/lava_bump.JPG", &width, &height, &channels, 1);
+	//textures[10] = SOIL_load_OGL_texture_from_memory(image, width * height, SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS);
+
+	textures[10] = SOIL_load_OGL_texture(TEXTUREDIR"sun/textures/lava_bump.JPG",
+		SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS);
 	
-	for (int tex = 0; tex < 9; tex++) {
+	for (int tex = 0; tex < 11; tex++) {
 		if (!textures[tex]) return;
 		SetTextureRepeating(textures[tex], true);
 	}
@@ -53,13 +61,13 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 	Shader* sunShader = new Shader("planet_vertex.glsl", "sun_fragment.glsl");
 
 	BindShader(planetShader);
-	glUniform1f(glGetUniformLocation(planetShader->GetProgram(), "snowHeightStart"), 0.9);
-	glUniform1f(glGetUniformLocation(planetShader->GetProgram(), "mountainHeightStart"), 0.5);
-	glUniform1f(glGetUniformLocation(planetShader->GetProgram(), "grassHeightStart"), 0.2);
+	glUniform1f(glGetUniformLocation(planetShader->GetProgram(), "snowHeightStart"), 0.95);
+	glUniform1f(glGetUniformLocation(planetShader->GetProgram(), "mountainHeightStart"), 0.7);
+	glUniform1f(glGetUniformLocation(planetShader->GetProgram(), "grassHeightStart"), 0.4);
 
 	glUniform1f(glGetUniformLocation(planetShader->GetProgram(), "diffusePower"), 0.9);
-	glUniform1f(glGetUniformLocation(planetShader->GetProgram(), "specularPower"), 16);
-	glUniform1f(glGetUniformLocation(planetShader->GetProgram(), "specularWeight"), 0.3);
+	glUniform1f(glGetUniformLocation(planetShader->GetProgram(), "specularPower"), 2);
+	glUniform1f(glGetUniformLocation(planetShader->GetProgram(), "specularWeight"), 0);
 	glUniform1f(glGetUniformLocation(planetShader->GetProgram(), "ambientPower"), 0.1);
 
 	Vector4 shadowColor(0, 0, 0, 1);
@@ -69,30 +77,32 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 	glUniform4fv(glGetUniformLocation(planetShader->GetProgram(), "shadowColor"), 1, (float*)&shadowColor);
 	glUniform4fv(glGetUniformLocation(planetShader->GetProgram(), "ambientColor"), 1, (float*)&ambientColor);
 	glUniform4fv(glGetUniformLocation(planetShader->GetProgram(), "specularColor"), 1, (float*)&specularColor);
+	glUniform1i(glGetUniformLocation(planetShader->GetProgram(), "timeSkip"), 0);
 
 	BindShader(waterShader);
 
 	glUniform1f(glGetUniformLocation(waterShader->GetProgram(), "diffusePower"), 0.9);
-	glUniform1f(glGetUniformLocation(waterShader->GetProgram(), "specularPower"), 8);
+	glUniform1f(glGetUniformLocation(waterShader->GetProgram(), "specularPower"), 32);
 	glUniform1f(glGetUniformLocation(waterShader->GetProgram(), "specularWeight"), 1);
-	glUniform1f(glGetUniformLocation(waterShader->GetProgram(), "ambientPower"), 0.3);
+	glUniform1f(glGetUniformLocation(waterShader->GetProgram(), "ambientPower"), 0.2);
 
 	glUniform4fv(glGetUniformLocation(waterShader->GetProgram(), "shadowColor"), 1, (float*)&shadowColor);
 	glUniform4fv(glGetUniformLocation(waterShader->GetProgram(), "ambientColor"), 1, (float*)&ambientColor);
-	glUniform4fv(glGetUniformLocation(waterShader->GetProgram(), "specularColor"), 1, (float*)&specularColor);
-
+	glUniform4fv(glGetUniformLocation(waterShader->GetProgram(), "specularColor"), 1, (float*)&ambientColor);
 
 	planet = new Planet(512, 128, planetShader, TEXTUREDIR"planet/");
-	water = new Planet(512, 130, waterShader);
-	sun = new Planet(512, 512, sunShader, TEXTUREDIR"sun/");
+	water = new Planet(128, 130, waterShader);
+	sun = new Planet(128, 512, sunShader, TEXTUREDIR"sun/");
 
 	planet->AddTexture("snow", textures[0], textures[1]);
 	planet->AddTexture("mountain", textures[2], textures[3]);
 	planet->AddTexture("grass", textures[4], textures[5]);
 	planet->AddTexture("sand", textures[6], textures[7]);
 
-	sun->setPosition(Vector3(500, 100, -40).Normalised() * 5000);
-	sun->AddTexture("sun", textures[8]);
+	water->AddTexture("water", 0, textures[9]);
+
+	sun->setPosition(Vector3(500, 100, -40).Normalised() * 2000);
+	sun->AddTexture("sun", textures[8], textures[10]);
 
 	root->AddChild(planet);
 	root->AddChild(water);
@@ -108,6 +118,15 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glCullFace(GL_BACK);
 	init = true;
+}
+
+
+void Renderer::applyTimeSkip() {
+	sun->setScale({ 2, 2, 2 });
+
+	BindShader(planet->GetShader());
+	glUniform1i(glGetUniformLocation(planet->GetShader()->GetProgram(), "timeSkip"), 1);
+	water->removeMesh();
 }
 
 
@@ -200,11 +219,12 @@ void Renderer::DrawNode(SceneNode* node) {
 	if (node->GetMesh()) {
 		BindShader(node->GetShader());
 		UpdateShaderMatrices();
-		Vector3 lightDirection = Vector3(500, 100, -40).Normalised() * 5000;
+		Vector3 lightDirection = Vector3(500, 100, -40).Normalised() * 2000;
 		Vector3 pos = camera->GetPosition();
 
 		glUniform3fv(glGetUniformLocation(node->GetShader()->GetProgram(), "lightPosition"), 1, (float*)&lightDirection);
 		glUniform3fv(glGetUniformLocation(node->GetShader()->GetProgram(), "cameraPosition"), 1, (float*)&pos);
+		glUniform1f(glGetUniformLocation(node->GetShader()->GetProgram(), "elapsedTime"), (float)parent.GetTimer()->GetTotalTimeSeconds());
 
 		int texCount = 0;
 		for (auto iter = node->GetTextureIteratorStart();
@@ -246,6 +266,8 @@ void Renderer::DrawSkybox() {
 	glDepthMask(GL_FALSE);
 
 	BindShader(skyboxShader);
+	Vector3 pos = camera->GetPosition();
+	glUniform3fv(glGetUniformLocation(skyboxShader->GetProgram(), "cameraPosition"), 1, (float*)&pos);
 	UpdateShaderMatrices();
 
 	quad->Draw();

@@ -31,6 +31,9 @@ uniform float snowHeightStart;
 uniform float mountainHeightStart;
 uniform float grassHeightStart;
 
+uniform float elapsedTime;
+uniform int timeSkip;
+
 
 in vec3 fragPosition;
 in vec3 normal;
@@ -57,6 +60,8 @@ vec4 textureColor() {
 	vec4 grassColor = texture(grassTex, texCoord);
 	vec4 sandColor = texture(sandTex, texCoord);
 
+	if (timeSkip == 1) return sandColor;
+
 	if (height >= snowHeightStart) {
 		return mix(mountainColor, snowColor, (height - snowHeightStart) / (1 - snowHeightStart));
 	}
@@ -73,9 +78,8 @@ vec4 textureColor() {
 // Applies diffuse to the color.
 vec4 diffuse(vec4 color, vec3 incident, vec3 bumpNormal) {
 	float diffuseFactor = clamp(dot(incident, bumpNormal), 0, 1);
-	return mix(color, shadowColor, (1 - diffuseFactor) * diffusePower);
+	return color * diffuseFactor;
 }
-
 
 // Applies specular highlights.
 vec4 specular(vec4 color, vec3 incident, vec3 halfway, vec3 bumpNormal) {
@@ -90,6 +94,8 @@ vec3 getWeightedNormal() {
 	vec3 mountainNormal = texture(mountainBump, texCoord).rgb;
 	vec3 grassNormal = texture(grassBump, texCoord).rgb;
 	vec3 sandNormal = texture(sandBump, texCoord).rgb;
+
+	if (timeSkip == 1) return mix(sandNormal, mountainNormal, 0.5);
 
 	vec3 weighted;
 
@@ -131,6 +137,7 @@ void main() {
 	final = mix(final, ambientColor, ambientPower);
 	final = diffuse(final, incident, bumpNormal);
 	final = specular(final, incident, halfway, bumpNormal);
+	final.a = 1;
 
 //	final = applyFog(final);
 

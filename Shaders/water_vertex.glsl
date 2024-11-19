@@ -5,6 +5,8 @@ layout(location = 2) in vec2 texCoordIn;
 layout(location = 3) in vec3 normalIn;
 layout(location = 4) in vec4 tangentIn;
 
+uniform float elapsedTime;
+
 uniform mat4 projMatrix;
 uniform mat4 viewMatrix;
 uniform mat4 modelMatrix;
@@ -30,7 +32,9 @@ void main() {
 	tangent = wTangent;
 	binormal = cross(wTangent, wNormal) * tangentIn.w;
 
+	vec3 altered = positionIn + (normalize(positionIn) * sin(elapsedTime) * 0.5);
+
 	mat4 mvp = projMatrix * viewMatrix * modelMatrix;
-	gl_Position = mvp * vec4(positionIn, 1);
+	gl_Position = mvp * vec4(altered, 1);
 	texCoord = texCoordIn;
 }
