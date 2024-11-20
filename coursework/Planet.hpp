@@ -43,6 +43,12 @@ public:
 	void setPosition(Vector3 p) { position = p; }
 	Vector3 getPosition() const { return position; }
 
+	void MakeTransparent() {
+		for (SceneNode* child : children) {
+			child->SetColour({ 0, 0, 0, 0.8 });
+		}
+	}
+
 	void removeMesh() {
 		for (SceneNode* child : children) {
 			delete child->GetMesh();

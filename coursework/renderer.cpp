@@ -92,7 +92,7 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent), parent(parent) {
 
 	planet = new Planet(512, 128, planetShader, TEXTUREDIR"planet/");
 	water = new Planet(128, 130, waterShader);
-	sun = new Planet(128, 512, sunShader, TEXTUREDIR"sun/");
+	sun = new Planet(32, 512, sunShader);
 
 	planet->AddTexture("snow", textures[0], textures[1]);
 	planet->AddTexture("mountain", textures[2], textures[3]);
@@ -100,8 +100,10 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent), parent(parent) {
 	planet->AddTexture("sand", textures[6], textures[7]);
 
 	water->AddTexture("water", 0, textures[9]);
+	water->MakeTransparent();
 
 	sun->setPosition(Vector3(500, 100, -40).Normalised() * 2000);
+	sun->SetDrawDistance(2000);
 	sun->AddTexture("sun", textures[8], textures[10]);
 
 	root->AddChild(planet);

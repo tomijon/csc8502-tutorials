@@ -23,7 +23,7 @@ void PlanetSurface::generateMesh() {
 	indices = new unsigned int[numIndices];
 	textureCoords = new Vector2[numVertices];
 
-	Vector2 textureScale = Vector2(1.0f / 16.0f, 1.0f / 16.0f);
+	Vector2 textureScale = Vector2(1.0f / 32.0f, 1.0f / 32.0f);
 
 	for (int z = 0; z < size; z++) {
 		for (int x = 0; x < size; x++) {
