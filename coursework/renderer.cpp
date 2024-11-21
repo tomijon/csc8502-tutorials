@@ -1,11 +1,55 @@
 #include "Renderer.h"
 #include <algorithm>
 #include <iostream>
+#include <utility>
+
+using namespace Render;
 
 Renderer::Renderer(Window& parent) : OGLRenderer(parent), parent(parent) {
 	camera = new Camera(-50, 305, {-200, 5, 1.5});
 	animator = new CameraAnimator(camera);
 	animator->setFade(smoothFade);
+
+	// Frame buffer creation.
+	glGenFramebuffers(2, frameBuffers);
+	glGenTextures(2, frameTextures);
+	glGenTextures(1, &depthTex);
+
+	// Depth texture.
+	glBindTexture(GL_TEXTURE_2D, depthTex);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, width, height, 0,
+		GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL);
+
+	// Color Textures.
+	for (int i = 0; i < 2; i++) {
+		glBindTexture(GL_TEXTURE_2D, frameTextures[i]);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0,
+			GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+	}
+
+	// Attach to render buffer.
+	glBindFramebuffer(GL_FRAMEBUFFER, frameBuffers[Framebuffer::RENDER]);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTex, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, depthTex, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, frameTextures[Framebuffer::RENDER], 0);
+
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) !=
+		GL_FRAMEBUFFER_COMPLETE || !depthTex || !frameTextures[Framebuffer::RENDER]) {
+		return;
+	}
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+
+
+
 
 	// Loading planet textures.
 	textures[0] = SOIL_load_OGL_texture(TEXTUREDIR"planet/textures/snow_texture.JPG",
@@ -28,11 +72,6 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent), parent(parent) {
 		SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS);
 	textures[9] = SOIL_load_OGL_texture(TEXTUREDIR"waterbump.PNG",
 		SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS);
-
-	//int width, height, channels;
-	//unsigned char* image = SOIL_load_image(TEXTUREDIR"sun/textures/lava_bump.JPG", &width, &height, &channels, 1);
-	//textures[10] = SOIL_load_OGL_texture_from_memory(image, width * height, SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS);
-
 	textures[10] = SOIL_load_OGL_texture(TEXTUREDIR"sun/textures/lava_bump.JPG",
 		SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS);
 	
@@ -42,7 +81,7 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent), parent(parent) {
 	}
 
 	// Loading skybox.
-	quad = new Quad();
+	skyboxMesh = new Quad();
 	skybox = SOIL_load_OGL_cubemap(
 		TEXTUREDIR"space/nx.png",TEXTUREDIR"space/px.png",
 		TEXTUREDIR"space/py.png",TEXTUREDIR"space/ny.png",
@@ -51,7 +90,14 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent), parent(parent) {
 	if (!skybox) return;
 	skyboxShader = new Shader("skybox_vertex.glsl", "skybox_fragment.glsl");
 	if (!skyboxShader->LoadSuccess()) return;
-	
+
+
+	postProcTex = new Shader("screen_vertex.glsl", "blur_fragment.glsl");
+	postProcDraw = new Shader("screen_vertex.glsl", "screen_fragment.glsl");
+	screen = new Quad();
+	postProcessMesh = new Quad();
+
+	if (!postProcTex || !postProcDraw) return;
 
 	// Spawning the planets in.
 	root = new SceneNode();
@@ -133,16 +179,18 @@ void Renderer::applyTimeSkip() {
 
 
 Renderer::~Renderer() {
-	delete shader;
-	delete camera;
-	delete root;
-	delete skyboxShader;
+	//delete shader;
+	//delete camera;
+	//delete root;
+	//delete skyboxShader;
 
-	glDeleteTextures(8, textures);
+	//glDeleteTextures(8, textures);
 }
 
 
 void Renderer::RenderScene() {
+	glBindFramebuffer(GL_FRAMEBUFFER, frameBuffers[Framebuffer::RENDER]);
+
 	BuildNodeLists(root);
 	SortNodeLists();
 
@@ -152,9 +200,60 @@ void Renderer::RenderScene() {
 	DrawNodes();
 	ClearNodeLists();
 
-	//glActiveTexture(GL_TEXTURE0);
-	//glBindTexture(GL_TEXTURE_2D, terrainTex);
-	//heightMap->Draw();
+	Matrix4 temp = viewMatrix;
+	
+	if (drawPostProc) {
+		glBindFramebuffer(GL_FRAMEBUFFER, frameBuffers[Framebuffer::POST_PROC]);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+			GL_TEXTURE_2D, frameTextures[Framebuffer::POST_PROC], 0);
+		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+
+		BindShader(postProcTex);
+		modelMatrix.ToIdentity();
+		viewMatrix.ToIdentity();
+		projMatrix.ToIdentity();
+		UpdateShaderMatrices();
+
+		glDisable(GL_DEPTH_TEST);
+		glActiveTexture(GL_TEXTURE0);
+		glUniform1i(glGetUniformLocation(
+			postProcTex->GetProgram(), "renderTex"), 0
+		);
+
+		const int PASSES = 1;
+
+		int vertical = 0;
+
+		for (int i = 0; i < PASSES; i++) {
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+				GL_TEXTURE_2D, frameBuffers[Framebuffer::POST_PROC], 0);
+
+			glUniform1i(glGetUniformLocation(postProcTex->GetProgram(), "isVertical"),
+				0);
+			glBindTexture(GL_TEXTURE_2D, frameBuffers[Framebuffer::RENDER]);
+			postProcessMesh->Draw();
+
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+				GL_TEXTURE_2D, frameBuffers[Framebuffer::RENDER], 0);
+			glBindTexture(GL_TEXTURE_2D, frameBuffers[Framebuffer::POST_PROC]);
+			glUniform1i(glGetUniformLocation(postProcTex->GetProgram(), "isVertical"),
+				1);
+			glBindTexture(GL_TEXTURE_2D, frameBuffers[Framebuffer::RENDER]);
+			postProcessMesh->Draw();
+		}
+		glEnable(GL_DEPTH_TEST);
+	}
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+	BindShader(postProcDraw);
+	viewMatrix = temp;
+	UpdateShaderMatrices();
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, frameTextures[Framebuffer::RENDER]);
+	glUniform1i(glGetUniformLocation(postProcDraw->GetProgram(), "diffuseTex"), 0);
+	screen->Draw();
 }
 
 
@@ -208,6 +307,7 @@ void Renderer::SortNodeLists() {
 
 
 void Renderer::DrawNodes() {
+	SwitchToPerspective();
 	for (const auto& i : nodeList) {
 		DrawNode(i);
 	}
@@ -272,7 +372,7 @@ void Renderer::DrawSkybox() {
 	glUniform3fv(glGetUniformLocation(skyboxShader->GetProgram(), "cameraPosition"), 1, (float*)&pos);
 	UpdateShaderMatrices();
 
-	quad->Draw();
+	skyboxMesh->Draw();
 
 	glDepthMask(GL_TRUE);
 }

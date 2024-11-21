@@ -41,10 +41,10 @@ Quad::Quad() {
 
 
 	textureCoords = new Vector2[numVertices];
-	textureCoords[0] = { 0, 0 };
-	textureCoords[1] = { 1, 0 };
-	textureCoords[2] = { 0, 1 };
-	textureCoords[3] = { 1, 1 };
+	textureCoords[0] = { 0, 1 };
+	textureCoords[1] = { 0, 0 };
+	textureCoords[2] = { 1, 1 };
+	textureCoords[3] = { 1, 0 };
 
 	colours = new Vector4[numVertices];
 	normals = new Vector3[numVertices]; 

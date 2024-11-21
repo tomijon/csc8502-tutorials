@@ -8,6 +8,14 @@
 #include "Animator.hpp"
 #include "Planet.hpp"
 
+
+namespace Render {
+	enum Framebuffer {
+		RENDER = 0,
+		POST_PROC = 1
+	};
+}
+
 class Renderer : public OGLRenderer {
 public:
 	Renderer(Window& parent);
@@ -32,12 +40,21 @@ protected:
 
 	Shader* shader;
 	Shader* skyboxShader;
+	Shader* postProcDraw;
+	Shader* postProcTex;
 	Camera* camera;
 	CameraAnimator* animator;
 	SceneNode* root;
 	GLuint textures[11];
 	GLuint skybox;
-	Mesh* quad;
+	Mesh* skyboxMesh;
+	Mesh* postProcessMesh;
+	Mesh* screen;
+
+	GLuint frameBuffers[2];
+	GLuint frameTextures[2];
+	GLuint depthTex;
+	bool drawPostProc = true;
 
 	Planet* planet;
 	Planet* water;
