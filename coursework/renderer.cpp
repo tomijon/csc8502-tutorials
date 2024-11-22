@@ -6,17 +6,97 @@
 using namespace Render;
 
 Renderer::Renderer(Window& parent) : OGLRenderer(parent), parent(parent) {
-	camera = new Camera(-50, 305, {-200, 5, 1.5});
+	camera = new Camera(-50, 305, { -200, 5, 1.5 });
 	animator = new CameraAnimator(camera);
 	animator->setFade(smoothFade);
 
-	// Frame buffer creation.
-	glGenFramebuffers(2, frameBuffers);
-	glGenTextures(2, frameTextures);
-	glGenTextures(1, &depthTex);
+	animator->setPositionStart(Vector3(344, 5, -467));
+	animator->setPitchStart(-1);
+	animator->setYawStart(145);
+	animator->setRollStart(0);
 
-	// Depth texture.
-	glBindTexture(GL_TEXTURE_2D, depthTex);
+	animator->addPositionStep(Vector3(82, 5, -467), 10);
+	animator->addPositionStep(Vector3(-402, 182, -67), 20);
+	animator->addPositionStep(Vector3(-364, -311, -135), 30);
+	animator->addPositionStep(Vector3(-69, -4, -176), 40);
+	animator->addPositionStep(Vector3(-19, 64, -140), 50);
+	animator->addPositionStep(Vector3(2, 101, -84), 60);
+	animator->addPositionStep(Vector3(728, 86, 252), 70);
+	animator->addPositionStep(Vector3(1860, 86, 444), 80);
+
+	animator->addPitchStep(-2, 10);
+	animator->addPitchStep(-26, 20);
+	animator->addPitchStep(32, 30);
+	animator->addPitchStep(0, 40);
+	animator->addPitchStep(-5, 50);
+	animator->addPitchStep(39, 60);
+	animator->addPitchStep(-10, 70);
+	animator->addPitchStep(14, 80);
+
+	animator->addYawStep(172, 10);
+	animator->addYawStep(266, 20);
+	animator->addYawStep(290, 30);
+	animator->addYawStep(240, 40);
+	animator->addYawStep(194, 50);
+	animator->addYawStep(200, 60);
+	animator->addYawStep(73, 70);
+	animator->addYawStep(39, 80);
+
+	animator->addRollStep(-294, 30);
+	animator->addRollStep(-386, 40);
+	animator->addRollStep(0, 50);
+
+	// Generate render buffers and textures.
+	glGenFramebuffers(1, &renderFramebuffer);
+	glGenTextures(1, &renderColorOutput);
+	glGenTextures(1, &renderDepthOutput);
+
+	Shader* bloomShader = new Shader("screen_vertex.glsl", "bloom_fragment.glsl");
+	bloom = new PostProcess(width, height, bloomShader);
+
+	Shader* blackAndWhiteShader = new Shader("screen_vertex.glsl", "blackwhite_fragment.glsl");
+	blackAndWhite = new PostProcess(width, height, blackAndWhiteShader);
+
+	Shader* blackAndWhiteSmoothShader = new Shader("screen_vertex.glsl", "blackwhite_smooth.glsl");
+	blackAndWhiteSmooth = new PostProcess(width, height, blackAndWhiteSmoothShader);
+
+	Shader* smoothShader = new Shader("screen_vertex.glsl", "smooth_fragment.glsl");
+	smooth = new PostProcess(width, height, smoothShader);
+
+	Shader* blurShader = new Shader("screen_vertex.glsl", "blur_fragment.glsl");
+	blur = new PostProcess(width, height, blurShader);
+
+	bloom->setActive(true);
+	blackAndWhite->setActive(false);
+	blackAndWhiteSmooth->setActive(false);
+	smooth->setActive(true);
+	blur->setActive(true);
+
+	bloom->setInputBuffer(renderColorOutput);
+	blackAndWhite->setInputBuffer(bloom->getOutputBuffer());
+	blackAndWhiteSmooth->setInputBuffer(blackAndWhite->getOutputBuffer());
+	smooth->setInputBuffer(blackAndWhiteSmooth->getOutputBuffer());
+	blur->setInputBuffer(smooth->getOutputBuffer());
+
+	bloom->setPasses(4);
+	blackAndWhite->setPasses(1);
+	blackAndWhiteSmooth->setPasses(1);
+	smooth->setPasses(2);
+	blur->setPasses(4);
+
+
+
+	// Initialise render color output texture.
+	glBindTexture(GL_TEXTURE_2D, renderColorOutput);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0,
+		GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+
+	// Initilise render depth output texture. 
+	glBindTexture(GL_TEXTURE_2D, renderDepthOutput);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -24,32 +104,17 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent), parent(parent) {
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, width, height, 0,
 		GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL);
 
-	// Color Textures.
-	for (int i = 0; i < 2; i++) {
-		glBindTexture(GL_TEXTURE_2D, frameTextures[i]);
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0,
-			GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-	}
-
 	// Attach to render buffer.
-	glBindFramebuffer(GL_FRAMEBUFFER, frameBuffers[Framebuffer::RENDER]);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTex, 0);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, depthTex, 0);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, frameTextures[Framebuffer::RENDER], 0);
+	glBindFramebuffer(GL_FRAMEBUFFER, renderFramebuffer);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, renderDepthOutput, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, renderDepthOutput, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, renderColorOutput, 0);
 
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) !=
-		GL_FRAMEBUFFER_COMPLETE || !depthTex || !frameTextures[Framebuffer::RENDER]) {
+		GL_FRAMEBUFFER_COMPLETE || !renderDepthOutput || !renderColorOutput) {
 		return;
 	}
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-
-
-
 
 	// Loading planet textures.
 	textures[0] = SOIL_load_OGL_texture(TEXTUREDIR"planet/textures/snow_texture.JPG",
@@ -81,7 +146,6 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent), parent(parent) {
 	}
 
 	// Loading skybox.
-	skyboxMesh = new Quad();
 	skybox = SOIL_load_OGL_cubemap(
 		TEXTUREDIR"space/nx.png",TEXTUREDIR"space/px.png",
 		TEXTUREDIR"space/py.png",TEXTUREDIR"space/ny.png",
@@ -92,10 +156,9 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent), parent(parent) {
 	if (!skyboxShader->LoadSuccess()) return;
 
 
-	postProcTex = new Shader("screen_vertex.glsl", "blur_fragment.glsl");
+	postProcTex = new Shader("screen_vertex.glsl", "blackwhite_fragment.glsl");
 	postProcDraw = new Shader("screen_vertex.glsl", "screen_fragment.glsl");
 	screen = new Quad();
-	postProcessMesh = new Quad();
 
 	if (!postProcTex || !postProcDraw) return;
 
@@ -149,13 +212,13 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent), parent(parent) {
 	water->MakeTransparent();
 
 	sun->setPosition(Vector3(500, 100, -40).Normalised() * 2000);
-	sun->SetDrawDistance(2000);
+	sun->SetDrawDistance(4000);
+	sun->SetBoundingRadius(10000);
 	sun->AddTexture("sun", textures[8], textures[10]);
 
 	root->AddChild(planet);
 	root->AddChild(water);
 	root->AddChild(sun);
-
 
 	SwitchToPerspective();
 	glEnable(GL_DEPTH_TEST);
@@ -189,70 +252,124 @@ Renderer::~Renderer() {
 
 
 void Renderer::RenderScene() {
-	glBindFramebuffer(GL_FRAMEBUFFER, frameBuffers[Framebuffer::RENDER]);
+	glBindFramebuffer(GL_FRAMEBUFFER, renderFramebuffer);
+	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 	BuildNodeLists(root);
 	SortNodeLists();
 
-	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 	DrawSkybox();
 
 	DrawNodes();
 	ClearNodeLists();
 
-	Matrix4 temp = viewMatrix;
-	
-	if (drawPostProc) {
-		glBindFramebuffer(GL_FRAMEBUFFER, frameBuffers[Framebuffer::POST_PROC]);
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-			GL_TEXTURE_2D, frameTextures[Framebuffer::POST_PROC], 0);
-		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+	glDisable(GL_DEPTH_TEST);
 
-		BindShader(postProcTex);
-		modelMatrix.ToIdentity();
-		viewMatrix.ToIdentity();
-		projMatrix.ToIdentity();
-		UpdateShaderMatrices();
+	GLuint readFrame = renderColorOutput;
+	GLuint drawFrame = renderColorOutput;
 
-		glDisable(GL_DEPTH_TEST);
+	if (bloom->hasInitialised() && bloom->isActive()) {
+		bloom->bind();
+		BindShader(bloom->getShader());
+		
+		drawFrame = bloom->getOutputBuffer();
+
 		glActiveTexture(GL_TEXTURE0);
-		glUniform1i(glGetUniformLocation(
-			postProcTex->GetProgram(), "renderTex"), 0
-		);
+		glUniform1i(glGetUniformLocation(bloom->getShader()->GetProgram(), "renderTex"), 0);
 
-		const int PASSES = 1;
+		for (unsigned int i = 0; i < bloom->getPasses(); i++) {
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
+				drawFrame, 0);
+			glClear(GL_COLOR_BUFFER_BIT);
+			glBindTexture(GL_TEXTURE_2D, readFrame);
+			screen->Draw();
+			std::swap(drawFrame, readFrame);
+		}
+	}
+	if (smooth->hasInitialised() && smooth->isActive()) {
+		smooth->bind();
+		BindShader(smooth->getShader());
+		
+		drawFrame = smooth->getOutputBuffer();
 
+		glActiveTexture(GL_TEXTURE0);
+		glUniform1i(glGetUniformLocation(smooth->getShader()->GetProgram(), "renderTex"), 0);
+
+		for (unsigned int i = 0; i < smooth->getPasses(); i++) {
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
+				drawFrame, 0);
+			glClear(GL_COLOR_BUFFER_BIT);
+			glBindTexture(GL_TEXTURE_2D, readFrame);
+			screen->Draw();
+			std::swap(drawFrame, readFrame);
+		}
+	}
+	if (blur->hasInitialised() && blur->isActive()) {
+		blur->bind();
+		BindShader(blur->getShader());
+		
+		drawFrame = blur->getOutputBuffer();
 		int vertical = 0;
 
-		for (int i = 0; i < PASSES; i++) {
-			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-				GL_TEXTURE_2D, frameBuffers[Framebuffer::POST_PROC], 0);
+		glActiveTexture(GL_TEXTURE0);
+		glUniform1i(glGetUniformLocation(blur->getShader()->GetProgram(), "renderTex"), 0);
 
-			glUniform1i(glGetUniformLocation(postProcTex->GetProgram(), "isVertical"),
-				0);
-			glBindTexture(GL_TEXTURE_2D, frameBuffers[Framebuffer::RENDER]);
-			postProcessMesh->Draw();
-
-			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-				GL_TEXTURE_2D, frameBuffers[Framebuffer::RENDER], 0);
-			glBindTexture(GL_TEXTURE_2D, frameBuffers[Framebuffer::POST_PROC]);
-			glUniform1i(glGetUniformLocation(postProcTex->GetProgram(), "isVertical"),
-				1);
-			glBindTexture(GL_TEXTURE_2D, frameBuffers[Framebuffer::RENDER]);
-			postProcessMesh->Draw();
+		for (unsigned int i = 0; i < blur->getPasses(); i++) {
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
+				drawFrame, 0);
+			glClear(GL_COLOR_BUFFER_BIT);
+			glBindTexture(GL_TEXTURE_2D, readFrame);
+			glUniform1i(glGetUniformLocation(blur->getShader()->GetProgram(), "isVertical"), vertical);
+			screen->Draw();
+			std::swap(drawFrame, readFrame);
+			vertical = (vertical + 1) % 2;
 		}
-		glEnable(GL_DEPTH_TEST);
 	}
+	if (blackAndWhite->hasInitialised() && blackAndWhite->isActive()) {
+		blackAndWhite->bind();
+		BindShader(blackAndWhite->getShader());
+		
+		drawFrame = blackAndWhite->getOutputBuffer();
+
+		glActiveTexture(GL_TEXTURE0);
+		glUniform1i(glGetUniformLocation(blackAndWhite->getShader()->GetProgram(), "renderTex"), 0);
+
+		for (unsigned int i = 0; i < blackAndWhite->getPasses(); i++) {
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
+				drawFrame, 0);
+			glClear(GL_COLOR_BUFFER_BIT);
+			glBindTexture(GL_TEXTURE_2D, readFrame);
+			screen->Draw();
+			std::swap(drawFrame, readFrame);
+		}
+	}
+	if (blackAndWhiteSmooth->hasInitialised() && blackAndWhiteSmooth->isActive()) {
+		blackAndWhiteSmooth->bind();
+		BindShader(blackAndWhiteSmooth->getShader());
+		
+		drawFrame = blackAndWhiteSmooth->getOutputBuffer();
+
+		glActiveTexture(GL_TEXTURE0);
+		glUniform1i(glGetUniformLocation(blackAndWhiteSmooth->getShader()->GetProgram(), "renderTex"), 0);
+
+		for (unsigned int i = 0; i < blackAndWhiteSmooth->getPasses(); i++) {
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
+				drawFrame, 0);
+			glClear(GL_COLOR_BUFFER_BIT);
+			glBindTexture(GL_TEXTURE_2D, readFrame);
+			screen->Draw();
+			std::swap(drawFrame, readFrame);
+		}
+	}
+	glEnable(GL_DEPTH_TEST);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 	BindShader(postProcDraw);
-	viewMatrix = temp;
-	UpdateShaderMatrices();
 
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, frameTextures[Framebuffer::RENDER]);
-	glUniform1i(glGetUniformLocation(postProcDraw->GetProgram(), "diffuseTex"), 0);
+	glBindTexture(GL_TEXTURE_2D, readFrame);
+	glUniform1i(glGetUniformLocation(postProcDraw->GetProgram(), "renderTex"), 0);
 	screen->Draw();
 }
 
@@ -273,7 +390,7 @@ void Renderer::UpdateScene(float msec) {
 
 
 void Renderer::SwitchToPerspective() {
-	projMatrix = Matrix4::Perspective(1, 20000, (float)width / (float)height, 45);
+	projMatrix = Matrix4::Perspective(1, 500000, (float)width / (float)height, 45);
 }
 
 
@@ -372,7 +489,7 @@ void Renderer::DrawSkybox() {
 	glUniform3fv(glGetUniformLocation(skyboxShader->GetProgram(), "cameraPosition"), 1, (float*)&pos);
 	UpdateShaderMatrices();
 
-	skyboxMesh->Draw();
+	screen->Draw();
 
 	glDepthMask(GL_TRUE);
 }

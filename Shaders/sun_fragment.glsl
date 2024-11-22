@@ -24,7 +24,7 @@ vec4 textureColor() {
 vec4 brightness(vec4 color) {
 	vec4 brightnessColor = vec4(1, 1, 1, 1) - texture(sunBump, texCoord);
 	brightnessColor.a = 1;
-	vec4 scaled = brightnessColor * 4;
+	vec4 scaled = brightnessColor * 2;
 	return color * scaled;
 }
 
